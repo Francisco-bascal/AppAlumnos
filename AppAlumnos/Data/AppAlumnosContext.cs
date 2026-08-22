@@ -12,6 +12,7 @@ public class AppAlumnosContext : IdentityDbContext<Usuario>
     {
     }
 
+    public DbSet<Materia> Materias { get; set; }
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
