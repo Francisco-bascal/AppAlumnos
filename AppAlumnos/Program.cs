@@ -1,7 +1,9 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using AppAlumnos.Data;
 using AppAlumnos.Models;
+using AppAlumnos.Services;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("AppAlumnosContextConnection") ?? throw new InvalidOperationException("Connection string 'AppAlumnosContextConnection' not found.");
@@ -17,6 +19,8 @@ builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
 }).AddEntityFrameworkStores<AppAlumnosContext>().AddDefaultTokenProviders();
+
+
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
