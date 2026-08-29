@@ -1,0 +1,48 @@
+﻿@model AppAlumnos.Models.Materia
+<div class="modal-header bg-primary text-white">
+    <h5 class="modal-title">
+        @(Model.Id == 0 ? "Nueva Materia" :
+                "Editar Materia")
+    </h5>
+
+    <button type="button" class="btn-close btn-close-white" data-
+            bs-dismiss="modal" aria-label="Close"></button>
+
+</div>
+
+<form id="formMateria" asp-action="Guardar" asp-
+      controller="Materias" method="post"
+      onsubmit="guardarMateria(event)">
+    <div class="modal-body">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+        <!-- Campo oculto para el ID -->
+        <input type="hidden" asp-for="Id" />
+        <div class="form-floating mb-3">
+            <input asp-for="Nombre" class="form-control"
+                   placeholder="Ej: Programación II" />
+            <label asp-for="Nombre"></label>
+
+            <span asp-validation-for="Nombre" class="text-danger"></span>
+
+        </div>
+        <div class="form-floating mb-3">
+            <input asp-for="Anio" class="form-control"
+                   placeholder="1" min="1" max="6" />
+            <label asp-for="Anio"></label>
+
+            <span asp-validation-for="Anio" class="text-danger"></span>
+
+        </div>
+    </div>
+    <div class="modal-footer">
+
+        <button type="button" class="btn btn-secondary" data-bs-
+                dismiss="modal">
+            Cancelar
+        </button>
+
+        <button type="submit" class="btn btn-success">
+            <i class="bi bi-check-circle"></i> Guardar
+        </button>
+    </div>
+</form>
