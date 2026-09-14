@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppAlumnos.Models;
 
@@ -26,7 +27,7 @@ public class Cursada : AuditableEntity
     public int AnioLectivo { get; set; } = DateTime.Today.Year;
 
     [Display(Name = "Nota")]
-    [Range(1, 10, ErrorMessage = "La nota debe estar entre 1 y 10.")]
+    [Range(0, 10, ErrorMessage = "La nota debe estar entre 0 y 10.")]
     public decimal? Nota { get; set; }
 
     [Display(Name = "Estado")]

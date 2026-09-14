@@ -6,8 +6,8 @@
 
 @Html.AntiForgeryToken()
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Gestión de Materias</h2>
+<div class="text-center mb-4">
+    <h2 class="mb-3">Gestión de Materias</h2>
     <button type="button" class="btn btn-primary"
             onclick="abrirModal('@Url.Action("ObtenerFormulario", "Materias", new { id = 0 })')">
         + Nueva Materia

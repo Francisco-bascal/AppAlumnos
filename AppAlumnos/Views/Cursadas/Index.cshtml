@@ -15,8 +15,8 @@
 
 @Html.AntiForgeryToken()
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2>Gestión de Cursadas</h2>
+<div class="text-center mb-4">
+    <h2 class="mb-3">Gestión de Cursadas</h2>
     <button type="button" class="btn btn-primary"
             onclick="abrirModal('@Url.Action("ObtenerFormulario", "Cursadas", new { id = 0 })')">
         + Nueva Inscripción
@@ -49,9 +49,9 @@
                         <td class="align-middle">
                             <span class="badge @(item.Estado switch
                                 {
-                                    AppAlumnos.Models.EstadoCursada.Aprobada => "text-bg-success",
-                                    AppAlumnos.Models.EstadoCursada.Desaprobada or AppAlumnos.Models.EstadoCursada.Libre => "text-bg-danger",
-                                    _ => "text-bg-secondary"
+                                    AppAlumnos.Models.EstadoCursada.Aprobada => "bg-success text-white",
+                                    AppAlumnos.Models.EstadoCursada.Desaprobada or AppAlumnos.Models.EstadoCursada.Libre => "bg-danger text-white",
+                                    _ => "bg-secondary text-white"
                                 })">
                                 @nombreEstado(item.Estado)
                             </span>
