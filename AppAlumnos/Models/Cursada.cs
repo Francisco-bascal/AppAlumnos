@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 
 namespace AppAlumnos.Models;
 
@@ -10,12 +11,14 @@ public class Cursada : AuditableEntity
     [Display(Name = "Alumno")]
     public string UsuarioId { get; set; } = null!;
 
+    [ValidateNever]
     public Usuario Usuario { get; set; } = null!;
 
     [Required(ErrorMessage = "Debe seleccionar una materia.")]
     [Display(Name = "Materia")]
     public int MateriaId { get; set; }
 
+    [ValidateNever]
     public Materia Materia { get; set; } = null!;
 
     [Display(Name = "Año Lectivo")]

@@ -27,6 +27,13 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.LogoutPath = "/Identity/Account/Logout";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
+
 builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, AppAlumnos.Services.EmailSender>();
 
 var app = builder.Build();
@@ -74,7 +81,9 @@ async Task InicializarRolesYAdmin(IServiceProvider serviceProvider)
 {
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = serviceProvider.GetRequiredService<UserManager<Usuario>>();
+
     string[] nombresDeRoles = { "Administrador", "Docente", "Alumno" };
+
     foreach (var nombreRol in nombresDeRoles)
     {
         if (!await roleManager.RoleExistsAsync(nombreRol))
@@ -82,6 +91,7 @@ async Task InicializarRolesYAdmin(IServiceProvider serviceProvider)
             await roleManager.CreateAsync(new IdentityRole(nombreRol));
         }
     }
+
     // Usuario Administrador inicial
     var adminEmail = "admin@instituto.edu.ar";
     var adminExistente = await userManager.FindByEmailAsync(adminEmail);

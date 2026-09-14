@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 
 namespace AppAlumnos.Controllers
 {
@@ -74,7 +75,7 @@ namespace AppAlumnos.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Docente,Administrador")]
-        public async Task<IActionResult> GuardarNotas(int id, decimal? nota, EstadoCursada estado)
+        public async Task<IActionResult> GuardarNotas(int id, string nota, EstadoCursada estado)
         {
             var cursada = await _contexto.Cursadas.FindAsync(id);
             if (cursada == null)
@@ -82,7 +83,22 @@ namespace AppAlumnos.Controllers
                 return Json(new { success = false, mensaje = "La cursada no existe." });
             }
 
-            cursada.Nota = nota;
+            if (!string.IsNullOrWhiteSpace(nota))
+            {
+                var parseado = decimal.TryParse(nota, NumberStyles.Number, CultureInfo.InvariantCulture, out var valorNota)
+                    || decimal.TryParse(nota, NumberStyles.Number, CultureInfo.CurrentCulture, out valorNota);
+
+                if (!parseado || valorNota < 1 || valorNota > 10)
+                {
+                    return Json(new { success = false, mensaje = "Ingrese una nota válida entre 1 y 10." });
+                }
+                cursada.Nota = valorNota;
+            }
+            else
+            {
+                cursada.Nota = null;
+            }
+
             cursada.Estado = estado;
             await _contexto.SaveChangesAsync();
 
