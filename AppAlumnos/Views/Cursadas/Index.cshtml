@@ -1,0 +1,212 @@
+@model IEnumerable<AppAlumnos.Models.Cursada>
+
+@{
+    ViewData["Title"] = "Gestión de Cursadas";
+    Func<AppAlumnos.Models.EstadoCursada, string> nombreEstado = e => e switch
+    {
+        AppAlumnos.Models.EstadoCursada.Cursando => "Cursando",
+        AppAlumnos.Models.EstadoCursada.Regular => "Regular",
+        AppAlumnos.Models.EstadoCursada.Aprobada => "Aprobada",
+        AppAlumnos.Models.EstadoCursada.Libre => "Libre",
+        AppAlumnos.Models.EstadoCursada.Desaprobada => "Desaprobada",
+        _ => e.ToString()
+    };
+}
+
+@Html.AntiForgeryToken()
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestión de Cursadas</h2>
+    <button type="button" class="btn btn-primary"
+            onclick="abrirModal('@Url.Action("ObtenerFormulario", "Cursadas", new { id = 0 })')">
+        + Nueva Inscripción
+    </button>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>@Html.DisplayNameFor(model => model.Usuario)</th>
+                    <th>@Html.DisplayNameFor(model => model.Materia)</th>
+                    <th>@Html.DisplayNameFor(model => model.AnioLectivo)</th>
+                    <th>@Html.DisplayNameFor(model => model.Nota)</th>
+                    <th>@Html.DisplayNameFor(model => model.Estado)</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="align-middle">@item.Usuario.Apellido, @item.Usuario.Nombre</td>
+                        <td class="align-middle">@item.Materia.Nombre</td>
+                        <td class="align-middle">@item.AnioLectivo</td>
+                        <td class="align-middle">
+                            @(item.Nota.HasValue ? item.Nota.Value.ToString("0.#") : "-")
+                        </td>
+                        <td class="align-middle">
+                            <span class="badge @(item.Estado switch
+                                {
+                                    AppAlumnos.Models.EstadoCursada.Aprobada => "text-bg-success",
+                                    AppAlumnos.Models.EstadoCursada.Desaprobada or AppAlumnos.Models.EstadoCursada.Libre => "text-bg-danger",
+                                    _ => "text-bg-secondary"
+                                })">
+                                @nombreEstado(item.Estado)
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-warning me-1"
+                                    onclick="abrirModal('@Url.Action("ObtenerFormulario", "Cursadas", new { id = item.Id })')">
+                                Editar
+                            </button>
+                            @if (User.IsInRole("Docente") || User.IsInRole("Administrador"))
+                            {
+                                <button class="btn btn-sm btn-outline-primary me-1"
+                                        onclick="abrirModalNotas(@item.Id)">
+                                    Cargar Notas
+                                </button>
+                            }
+                            <button class="btn btn-sm btn-outline-danger"
+                                    onclick="eliminarCursada(@item.Id)">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Contenedor del Modal Bootstrap -->
+<div class="modal fade" id="modalCursada" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="modalContent">
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const modalElement = new bootstrap.Modal(document.getElementById('modalCursada'));
+        const modalContent = document.getElementById('modalContent');
+
+        // 1. Abrir Modal para Crear/Editar
+        function abrirModal(url) {
+            fetch(url)
+                .then(res => res.text())
+                .then(html => {
+                    modalContent.innerHTML = html;
+                    $.validator.unobtrusive.parse('#formCursada');
+                    modalElement.show();
+                });
+        }
+
+        // 2. Abrir Modal para Cargar Notas (Docente/Admin)
+        function abrirModalNotas(id) {
+            fetch('@Url.Action("ObtenerFormularioNotas", "Cursadas")' + '/' + id)
+                .then(res => res.text())
+                .then(html => {
+                    modalContent.innerHTML = html;
+                    $.validator.unobtrusive.parse('#formNotas');
+                    modalElement.show();
+                });
+        }
+
+        // 3. Enviar Formulario vía AJAX
+        function guardarCursada(event) {
+            event.preventDefault();
+            const form = event.target;
+
+            if (!$(form).valid()) return;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form)
+            })
+                .then(res => {
+                    if (res.headers.get("content-type").includes("application/json")) {
+                        return res.json().then(data => {
+                            if (data.success) {
+                                modalElement.hide();
+                                location.reload();
+                            } else {
+                                Swal.fire('Error', data.mensaje, 'error');
+                            }
+                        });
+                    } else {
+                        return res.text().then(html => {
+                            modalContent.innerHTML = html;
+                            $.validator.unobtrusive.parse('#formCursada');
+                        });
+                    }
+                });
+        }
+
+        // 4. Enviar Notas vía AJAX
+        function guardarNotas(event) {
+            event.preventDefault();
+            const form = event.target;
+
+            if (!$(form).valid()) return;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        modalElement.hide();
+                        location.reload();
+                    } else {
+                        Swal.fire('Error', data.mensaje, 'error');
+                    }
+                });
+        }
+
+        // 5. Eliminar Registro vía AJAX
+        function eliminarCursada(id) {
+            Swal.fire({
+                title: '¿Estás seguro?',
+                text: '¿Estás seguro de eliminar esta inscripción?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    const formData = new FormData();
+                    formData.append('id', id);
+                    if (token) formData.append('__RequestVerificationToken', token);
+
+                    fetch('@Url.Action("Eliminar", "Cursadas")', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    '¡Eliminada!',
+                                    'La inscripción ha sido eliminada.',
+                                    'success'
+                                ).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.mensaje, 'error');
+                            }
+                        });
+                }
+            });
+        }
+    </script>
+}

@@ -25,6 +25,7 @@ builder.Services.AddIdentity<Usuario, IdentityRole>(options =>
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, AppAlumnos.Services.EmailSender>();
 
@@ -40,7 +41,7 @@ using (var scope = app.Services.CreateScope())
     catch(Exception ex) 
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error al poblar los datos o inicializar el administrador");
+        logger.LogError(ex, "Ocurriï¿½ un error al poblar los datos o inicializar el administrador");
     }
 }
 
@@ -68,7 +69,7 @@ app.MapRazorPages();
 
 app.Run();
 
-// Método de Seeding en Program.cs
+// Mï¿½todo de Seeding en Program.cs
 async Task InicializarRolesYAdmin(IServiceProvider serviceProvider)
 {
     var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -94,6 +95,7 @@ async Task InicializarRolesYAdmin(IServiceProvider serviceProvider)
             Apellido = "Sistema",
             Dni = 11111111,
             Legajo = "ADM-001",
+            Rol = "Administrador",
             EmailConfirmed = true
         };
         var resultado = await userManager.CreateAsync(nuevoAdmin, "Admin123!");
@@ -101,5 +103,10 @@ async Task InicializarRolesYAdmin(IServiceProvider serviceProvider)
         {
             await userManager.AddToRoleAsync(nuevoAdmin, "Administrador");
         }
+    }
+    else if (string.IsNullOrEmpty(adminExistente.Rol))
+    {
+        adminExistente.Rol = "Administrador";
+        await userManager.UpdateAsync(adminExistente);
     }
 }

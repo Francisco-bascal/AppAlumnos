@@ -4,6 +4,7 @@ using AppAlumnos.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppAlumnos.Migrations
 {
     [DbContext(typeof(AppAlumnosContext))]
-    partial class AppAlumnosContextModelSnapshot : ModelSnapshot
+    [Migration("20260914192619_AdicionCursadasYAuditoria")]
+    partial class AdicionCursadasYAuditoria
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

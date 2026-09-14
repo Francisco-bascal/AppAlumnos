@@ -2,7 +2,7 @@
 
 namespace AppAlumnos.Models
 {
-    public class Materia
+    public class Materia : AuditableEntity
     {
         public int Id { get; set; }
         [Required(ErrorMessage = "El nombre de la materia es obligatorio.")]

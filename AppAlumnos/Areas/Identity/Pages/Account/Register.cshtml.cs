@@ -155,6 +155,7 @@ namespace AppAlumnos.Areas.Identity.Pages.Account
                     _logger.LogInformation("El usuario creó una nueva cuenta con contraseña.");
 
                     // === ASIGNACIÓN DEL ROL POR DEFECTO ===
+                    user.Rol = "Alumno";
                     await _userManager.AddToRoleAsync(user, "Alumno");
                     // ======================================
 
