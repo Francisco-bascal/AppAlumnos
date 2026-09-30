@@ -1,0 +1,61 @@
+@{
+    var materias = (IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>)ViewBag.Materias;
+}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Seleccionar materia</h5>
+        <small class="text-muted">Elegí una de tus materias para cargar notas o generar el listado de inscriptos.</small>
+    </div>
+    <div class="card-body">
+        @if (!materias.Any())
+        {
+            <div class="text-center p-3">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <p class="mt-2 mb-0">No tenés materias asignadas.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label" for="selectMateria">Materia</label>
+                    <select id="selectMateria" class="form-select" asp-items="materias">
+                        <option value="">-- Seleccionar materia --</option>
+                    </select>
+                </div>
+                <div class="col-md-7 d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-primary" id="btnVerInscriptos">
+                        <i class="bi bi-people me-1"></i>Ver inscriptos y cargar notas
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" id="btnVerListado">
+                        <i class="bi bi-printer me-1"></i>Listado imprimible
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="btnDescargarPdf">
+                        <i class="bi bi-file-earmark-pdf me-1"></i>Descargar PDF
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    document.getElementById('btnVerInscriptos')?.addEventListener('click', function () {
+        const materiaId = document.getElementById('selectMateria').value;
+        if (!materiaId) { Swal.fire('Aviso', 'Seleccioná una materia.', 'warning'); return; }
+        cargarPortal('@Url.Action("Inscriptos", "Autogestion")' + '?materiaId=' + materiaId);
+    });
+
+    document.getElementById('btnVerListado')?.addEventListener('click', function () {
+        const materiaId = document.getElementById('selectMateria').value;
+        if (!materiaId) { Swal.fire('Aviso', 'Seleccioná una materia.', 'warning'); return; }
+        verListado(materiaId);
+    });
+
+    document.getElementById('btnDescargarPdf')?.addEventListener('click', function () {
+        const materiaId = document.getElementById('selectMateria').value;
+        if (!materiaId) { Swal.fire('Aviso', 'Seleccioná una materia.', 'warning'); return; }
+        descargarListadoPdf(materiaId);
+    });
+</script>

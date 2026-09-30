@@ -1,0 +1,54 @@
+@{
+    var esRegular = (bool)ViewBag.EsRegular;
+    var anioActual = (int)ViewBag.AnioActual;
+    var materiasAprobadas = (int)ViewBag.MateriasAprobadas;
+}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white">
+        <h5 class="mb-0"><i class="bi bi-award me-2 text-primary"></i>Certificados</h5>
+        <small class="text-muted">Consultá tu estado académico y descargá tus certificados.</small>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-person-check fs-3 text-primary me-2"></i>
+                        <h6 class="mb-0">Alumno regular @anioActual</h6>
+                    </div>
+                    @if (esRegular)
+                    {
+                        <p class="text-muted small mb-3">Consta tu condición de alumno/a regular durante el ciclo lectivo @anioActual.</p>
+                        <button type="button" class="btn btn-primary"
+                                onclick="descargarCertificado('regular')">
+                            <i class="bi bi-download me-1"></i>Descargar certificado
+                        </button>
+                    }
+                    else
+                    {
+                        <p class="text-muted small mb-0">No consta tu condición de alumno/a regular en el ciclo lectivo @anioActual.</p>
+                    }
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3 h-100">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-check2-circle fs-3 text-success me-2"></i>
+                        <h6 class="mb-0">Materias aprobadas</h6>
+                    </div>
+                    <p class="text-muted small mb-3">
+                        @(materiasAprobadas == 0 ? "Todavía no registrás materias aprobadas." : $"Registrás {materiasAprobadas} materia(s) aprobada(s).")
+                    </p>
+                    @if (materiasAprobadas > 0)
+                    {
+                        <button type="button" class="btn btn-success"
+                                onclick="descargarCertificado('materias')">
+                            <i class="bi bi-download me-1"></i>Descargar certificado
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

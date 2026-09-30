@@ -1,0 +1,270 @@
+@using Microsoft.AspNetCore.Identity
+@using AppAlumnos.Models
+@inject UserManager<Usuario> UserManager
+@{
+    ViewData["Title"] = "Portal de Autogestión";
+    var usuario = await UserManager.GetUserAsync(User);
+    var esAlumno = User.IsInRole("Alumno") || User.IsInRole("Administrador");
+    var esDocente = User.IsInRole("Docente") || User.IsInRole("Administrador");
+}
+
+@Html.AntiForgeryToken()
+
+<div class="text-center mb-4">
+    <h2 class="mb-1">Portal de Autogestión</h2>
+    <p class="text-muted mb-0">Hola @(usuario?.Nombre) @(usuario?.Apellido), elegí una opción para comenzar.</p>
+</div>
+
+<div class="row g-3 justify-content-center">
+
+    @if (esAlumno)
+    {
+        <div class="col-sm-6 col-lg-4">
+            <button type="button" class="card card-opcion text-center w-100 h-100 border-0 shadow-sm"
+                    onclick="cargarPortal('@Url.Action("InscripcionMaterias", "Autogestion")')">
+                <div class="card-body">
+                    <i class="bi bi-journal-plus fs-1 text-primary"></i>
+                    <h6 class="card-title mt-3 mb-1">Inscripción a materias</h6>
+                    <small class="text-muted">Inscribite a las materias del año lectivo actual.</small>
+                </div>
+            </button>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <button type="button" class="card card-opcion text-center w-100 h-100 border-0 shadow-sm"
+                    onclick="cargarPortal('@Url.Action("HistoriaAcademica", "Autogestion")')">
+                <div class="card-body">
+                    <i class="bi bi-clipboard-data fs-1 text-primary"></i>
+                    <h6 class="card-title mt-3 mb-1">Historia académica</h6>
+                    <small class="text-muted">Consultá tus cursadas, notas y estados por año.</small>
+                </div>
+            </button>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <button type="button" class="card card-opcion text-center w-100 h-100 border-0 shadow-sm"
+                    onclick="cargarPortal('@Url.Action("Certificados", "Autogestion")')">
+                <div class="card-body">
+                    <i class="bi bi-award fs-1 text-primary"></i>
+                    <h6 class="card-title mt-3 mb-1">Certificados</h6>
+                    <small class="text-muted">Descargá tu certificado de alumno regular y materias aprobadas.</small>
+                </div>
+            </button>
+        </div>
+    }
+
+    @if (esDocente)
+    {
+        <div class="col-sm-6 col-lg-4">
+            <button type="button" class="card card-opcion text-center w-100 h-100 border-0 shadow-sm"
+                    onclick="cargarPortal('@Url.Action("MisMaterias", "Autogestion")')">
+                <div class="card-body">
+                    <i class="bi bi-book fs-1 text-primary"></i>
+                    <h6 class="card-title mt-3 mb-1">Mis materias e inscriptos</h6>
+                    <small class="text-muted">Consultá tus materias y los alumnos inscriptos.</small>
+                </div>
+            </button>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <button type="button" class="card card-opcion text-center w-100 h-100 border-0 shadow-sm"
+                    onclick="cargarPortal('@Url.Action("SeleccionarListado", "Autogestion")')">
+                <div class="card-body">
+                    <i class="bi bi-pencil-square fs-1 text-primary"></i>
+                    <h6 class="card-title mt-3 mb-1">Cargar notas y estado</h6>
+                    <small class="text-muted">Registrá calificaciones y estados de cursada.</small>
+                </div>
+            </button>
+        </div>
+        <div class="col-sm-6 col-lg-4">
+            <button type="button" class="card card-opcion text-center w-100 h-100 border-0 shadow-sm"
+                    onclick="cargarPortal('@Url.Action("SeleccionarListado", "Autogestion")')">
+                <div class="card-body">
+                    <i class="bi bi-printer fs-1 text-primary"></i>
+                    <h6 class="card-title mt-3 mb-1">Listado imprimible</h6>
+                    <small class="text-muted">Generá listados de inscriptos para imprimir o descargar en PDF.</small>
+                </div>
+            </button>
+        </div>
+    }
+
+    @if (esAlumno || esDocente)
+    {
+        <div class="col-sm-6 col-lg-4">
+            <button type="button" class="card card-opcion text-center w-100 h-100 border-0 shadow-sm"
+                    onclick="cargarPortal('@Url.Action("MiPerfil", "Autogestion")')">
+                <div class="card-body">
+                    <i class="bi bi-person-circle fs-1 text-primary"></i>
+                    <h6 class="card-title mt-3 mb-1">Mi perfil</h6>
+                    <small class="text-muted">Actualizá tu foto de perfil y consultá tus datos.</small>
+                </div>
+            </button>
+        </div>
+    }
+
+</div>
+
+<div id="contenidoPortal" class="mt-4"></div>
+
+<!-- Contenedor del Modal Bootstrap -->
+<div class="modal fade" id="modalPortal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content" id="modalPortalContent">
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const modalPortalElement = new bootstrap.Modal(document.getElementById('modalPortal'));
+        const modalPortalContent = document.getElementById('modalPortalContent');
+
+        function cargarPortal(url) {
+            fetch(url)
+                .then(res => res.text())
+                .then(html => {
+                    document.getElementById('contenidoPortal').innerHTML = html;
+                });
+        }
+
+        function abrirModalPortal(url, formId) {
+            fetch(url)
+                .then(res => res.text())
+                .then(html => {
+                    modalPortalContent.innerHTML = html;
+                    if (formId) $.validator.unobtrusive.parse(formId);
+                    modalPortalElement.show();
+                });
+        }
+
+        function guardarFormularioPortal(event, urlReload) {
+            event.preventDefault();
+            const form = event.target;
+
+            if (!$(form).valid()) return;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        modalPortalElement.hide();
+                        Swal.fire('¡Listo!', data.mensaje, 'success');
+                        cargarPortal(urlReload);
+                    } else {
+                        Swal.fire('Error', data.mensaje, 'error');
+                    }
+                });
+        }
+
+        function inscribirse(materiaId) {
+            Swal.fire({
+                title: '¿Confirmás la inscripción?',
+                text: 'Se registrará tu inscripción para el año lectivo actual.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, inscribirme',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (!result.isConfirmed) return;
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                const formData = new FormData();
+                formData.append('materiaId', materiaId);
+                if (token) formData.append('__RequestVerificationToken', token);
+
+                fetch('@Url.Action("Inscribirse", "Autogestion")', {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('¡Inscripto!', data.mensaje, 'success');
+                            cargarPortal('@Url.Action("InscripcionMaterias", "Autogestion")');
+                        } else {
+                            Swal.fire('Error', data.mensaje, 'error');
+                        }
+                    });
+            });
+        }
+
+        function filtrarHistoria() {
+            const anio = document.getElementById('filtroAnio')?.value ?? '';
+            const estado = document.getElementById('filtroEstado')?.value ?? '';
+            cargarPortal('@Url.Action("HistoriaAcademica", "Autogestion")' + '?anio=' + anio + '&estado=' + estado);
+        }
+
+        function guardarNotasPortal(event) {
+            guardarFormularioPortal(event, '@Url.Action("Inscriptos", "Autogestion")' + '?materiaId=' + document.getElementById('materiaContexto')?.value);
+        }
+
+        function abrirFormularioNotas(cursadaId) {
+            abrirModalPortal('@Url.Action("ObtenerFormularioNotas", "Autogestion")' + '?cursadaId=' + cursadaId, '#formNotasPortal');
+        }
+
+        function verListado(materiaId) {
+            window.open('@Url.Action("ListadoInscriptos", "Autogestion")' + '?materiaId=' + materiaId, '_blank');
+        }
+
+        function descargarListadoPdf(materiaId) {
+            window.open('@Url.Action("DescargarListadoPdf", "Autogestion")' + '?materiaId=' + materiaId, '_blank');
+        }
+
+        function descargarCertificado(tipo) {
+            window.open('@Url.Action("GenerarCertificado", "Autogestion")' + '?tipo=' + tipo, '_blank');
+        }
+
+        function previsualizarAvatar(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const archivo = input.files[0];
+            if (archivo.size > 2 * 1024 * 1024) {
+                Swal.fire('Error', 'La imagen supera el tamaño máximo de 2 MB.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const extensionesValidas = ['jpg', 'jpeg', 'png', 'webp'];
+            const extension = archivo.name.split('.').pop().toLowerCase();
+            if (!extensionesValidas.includes(extension)) {
+                Swal.fire('Error', 'Formato no permitido. Usá JPG, PNG o WebP.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const lector = new FileReader();
+            lector.onload = function (e) {
+                const img = document.getElementById('avatarPreview');
+                if (img) img.src = e.target.result;
+            };
+            lector.readAsDataURL(archivo);
+        }
+
+        function subirAvatar(event) {
+            event.preventDefault();
+            const form = event.target;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('¡Foto actualizada!', data.mensaje, 'success');
+                        const img = document.getElementById('avatarPreview');
+                        if (img && data.rutaFoto) {
+                            img.src = data.rutaFoto + '?v=' + Date.now();
+                        }
+                        cargarPortal('@Url.Action("MiPerfil", "Autogestion")');
+                    } else {
+                        Swal.fire('Error', data.mensaje, 'error');
+                    }
+                });
+        }
+    </script>
+}

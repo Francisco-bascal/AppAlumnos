@@ -4,9 +4,12 @@ using AppAlumnos.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
+using QuestPDF.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("AppAlumnosContextConnection") ?? throw new InvalidOperationException("Connection string 'AppAlumnosContextConnection' not found.");
+
+QuestPDF.Settings.License = LicenseType.Community;
 
 builder.Services.AddDbContext<AppAlumnosContext>(options => options.UseSqlServer(connectionString));
 
@@ -35,6 +38,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, AppAlumnos.Services.EmailSender>();
+builder.Services.AddTransient<ArchivoService>();
+builder.Services.AddTransient<CertificadoService>();
 
 var app = builder.Build();
 

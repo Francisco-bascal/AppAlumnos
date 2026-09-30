@@ -65,6 +65,12 @@ public class AppAlumnosContext : IdentityDbContext<Usuario>
             .HasForeignKey(c => c.MateriaId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.Entity<Materia>()
+            .HasOne(m => m.Docente)
+            .WithMany()
+            .HasForeignKey(m => m.DocenteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Entity<Cursada>()
             .Property(c => c.Nota)
             .HasPrecision(4, 1);

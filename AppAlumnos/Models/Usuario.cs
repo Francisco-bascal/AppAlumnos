@@ -30,6 +30,9 @@ public class Usuario : IdentityUser
     public bool Estado { get; set; }
     [Display(Name = "Fecha de Alta")]
     public DateTime FechaAlta { get; set; }
+    [Display(Name = "Foto de perfil")]
+    [StringLength(200, ErrorMessage = "La ruta de la foto no puede superar los {1} caracteres.")]
+    public string? RutaFoto { get; set; }
     [Display(Name = "Rol")]
     [StringLength(20, ErrorMessage = "El {0} no puede superar los {1} caracteres.")]
     public string Rol { get; set; } = "Alumno";

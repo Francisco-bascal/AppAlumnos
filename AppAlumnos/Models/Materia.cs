@@ -12,5 +12,8 @@ namespace AppAlumnos.Models
         [Display(Name = "Año Cursado")]
         [Range(1, 6, ErrorMessage = "El año debe estar entre 1 y 6.")]
         public int Anio { get; set; }
+        [Display(Name = "Docente")]
+        public string? DocenteId { get; set; }
+        public Usuario? Docente { get; set; }
     }
 }

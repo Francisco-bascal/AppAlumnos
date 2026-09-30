@@ -173,6 +173,29 @@ main .row > .col-md-8 {
     text-align: center;
 }
 
+.card-opcion {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    background: var(--app-surface);
+}
+
+.card-opcion:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12) !important;
+}
+
+.avatar-perfil {
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+}
+
+.avatar-navbar {
+    width: 32px;
+    height: 32px;
+    object-fit: cover;
+}
+
 .lead-narrow {
     max-width: 600px;
     margin-inline: auto;

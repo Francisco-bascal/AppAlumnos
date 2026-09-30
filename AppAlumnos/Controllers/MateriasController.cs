@@ -1,5 +1,7 @@
 using AppAlumnos.Data;
 using AppAlumnos.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -7,30 +9,35 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace AppAlumnos.Controllers
 {
+    [Authorize(Roles = "Administrador")]
     public class MateriasController : Controller
     {
         private readonly AppAlumnosContext _contexto;
+        private readonly UserManager<Usuario> _userManager;
 
-        public MateriasController(AppAlumnosContext contexto)
+        public MateriasController(AppAlumnosContext contexto, UserManager<Usuario> userManager)
         {
             _contexto = contexto;
+            _userManager = userManager;
         }
 
         // GET: Materias
         public async Task<IActionResult> Index()
         {
-            return View(await _contexto.Materias.ToListAsync());
+            return View(await _contexto.Materias
+                .Include(m => m.Docente)
+                .OrderBy(m => m.Nombre)
+                .ToListAsync());
         }
 
         // GET: Materias/ObtenerFormulario/0 (Crear) o /5 (Editar)
         [HttpGet]
         public async Task<IActionResult> ObtenerFormulario(int id = 0)
         {
-
+            await CargarDocentesAsync();
             if (id == 0)
             {
                 return PartialView("_FormularioMateriaPartial",
@@ -83,6 +90,7 @@ namespace AppAlumnos.Controllers
                 });
             }
             // Si falla la validación, devolvemos la misma partial con los errores marcados
+            await CargarDocentesAsync(materia.DocenteId);
             return PartialView("_FormularioMateriaPartial", materia);
         }
 
@@ -106,6 +114,15 @@ namespace AppAlumnos.Controllers
         private bool MateriaExiste(int id)
         {
             return _contexto.Materias.Any(e => e.Id == id);
+        }
+
+        private async Task CargarDocentesAsync(string? docenteIdSeleccionado = null)
+        {
+            var docentes = await _userManager.GetUsersInRoleAsync("Docente");
+            ViewBag.Docentes = new SelectList(
+                docentes.OrderBy(d => d.Apellido).ThenBy(d => d.Nombre)
+                    .Select(d => new { d.Id, NombreCompleto = $"{d.Apellido}, {d.Nombre}" }),
+                "Id", "NombreCompleto", docenteIdSeleccionado);
         }
     }
 }

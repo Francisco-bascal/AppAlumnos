@@ -1,0 +1,56 @@
+@model AppAlumnos.Models.Usuario
+
+<div class="row g-3 justify-content-center">
+    <div class="col-md-9 col-lg-7">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-person-circle me-2 text-primary"></i>Mi perfil</h5>
+                <small class="text-muted">Tus datos personales y foto de perfil.</small>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <img id="avatarPreview"
+                         src="@(Model.RutaFoto ?? "/images/avatars/placeholder.svg")"
+                         class="rounded-circle border shadow-sm avatar-perfil"
+                         alt="Foto de perfil" />
+                    <p class="text-muted small mt-2 mb-0">@Model.Apellido, @Model.Nombre - DNI @Model.Dni</p>
+                </div>
+
+                <form id="formAvatar" asp-action="SubirAvatar" asp-controller="Autogestion" method="post"
+                      enctype="multipart/form-data" onsubmit="subirAvatar(event)">
+                    @Html.AntiForgeryToken()
+                    <div class="input-group mb-2">
+                        <input type="file" name="foto" id="fotoAvatar" class="form-control"
+                               accept="image/jpeg,image/png,image/webp"
+                               onchange="previsualizarAvatar(this)" />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-upload me-1"></i>Subir foto
+                        </button>
+                    </div>
+                    <p class="form-text mb-0">Formatos JPG, PNG o WebP. Máximo 2 MB.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-9 col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white">
+                <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Datos</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Email</dt>
+                    <dd class="col-sm-8">@Model.Email</dd>
+                    <dt class="col-sm-4">Nombre</dt>
+                    <dd class="col-sm-8">@Model.Nombre @Model.Apellido</dd>
+                    <dt class="col-sm-4">DNI</dt>
+                    <dd class="col-sm-8">@Model.Dni</dd>
+                    <dt class="col-sm-4">Legajo</dt>
+                    <dd class="col-sm-8">@(Model.Legajo ?? "-")</dd>
+                    <dt class="col-sm-4">Rol</dt>
+                    <dd class="col-sm-8">@ViewBag.RolNombre</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>

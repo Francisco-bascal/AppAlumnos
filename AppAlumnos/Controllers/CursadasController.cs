@@ -9,7 +9,7 @@ using System.Globalization;
 
 namespace AppAlumnos.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Administrador,Docente")]
     public class CursadasController : Controller
     {
         private readonly AppAlumnosContext _contexto;

@@ -1,0 +1,86 @@
+@model List<AppAlumnos.Models.Cursada>
+@{
+    Func<AppAlumnos.Models.EstadoCursada, string> nombreEstado = e => e switch
+    {
+        AppAlumnos.Models.EstadoCursada.Cursando => "Cursando",
+        AppAlumnos.Models.EstadoCursada.Regular => "Regular",
+        AppAlumnos.Models.EstadoCursada.Aprobada => "Aprobada",
+        AppAlumnos.Models.EstadoCursada.Libre => "Libre",
+        AppAlumnos.Models.EstadoCursada.Desaprobada => "Desaprobada",
+        _ => e.ToString()
+    };
+    var materiaNombre = ViewBag.MateriaNombre as string;
+    var materiaId = (int)ViewBag.MateriaId;
+}
+
+<input type="hidden" id="materiaContexto" value="@materiaId" />
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h5 class="mb-0"><i class="bi bi-people me-2 text-primary"></i>Inscriptos - @materiaNombre</h5>
+            <small class="text-muted">Cantidad de alumnos: @Model.Count</small>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary"
+                    onclick="verListado(@materiaId)">
+                <i class="bi bi-printer me-1"></i>Listado imprimible
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary"
+                    onclick="descargarListadoPdf(@materiaId)">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        @if (Model.Count == 0)
+        {
+            <div class="text-center p-4">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <p class="mt-2 mb-0">No hay alumnos inscriptos en esta materia.</p>
+            </div>
+        }
+        else
+        {
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Alumno</th>
+                        <th class="text-center">Año Lectivo</th>
+                        <th class="text-center">Nota</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cursada in Model)
+                    {
+                        <tr>
+                            <td class="align-middle">@cursada.Usuario.Apellido, @cursada.Usuario.Nombre</td>
+                            <td class="align-middle text-center">@cursada.AnioLectivo</td>
+                            <td class="align-middle text-center">
+                                @(cursada.Nota.HasValue ? cursada.Nota.Value.ToString("0.#") : "-")
+                            </td>
+                            <td class="align-middle text-center">
+                                <span class="badge @(cursada.Estado switch
+                                    {
+                                        AppAlumnos.Models.EstadoCursada.Aprobada => "bg-success text-white",
+                                        AppAlumnos.Models.EstadoCursada.Desaprobada or AppAlumnos.Models.EstadoCursada.Libre => "bg-danger text-white",
+                                        _ => "bg-secondary text-white"
+                                    })">
+                                    @nombreEstado(cursada.Estado)
+                                </span>
+                            </td>
+                            <td class="align-middle text-end">
+                                <button type="button" class="btn btn-sm btn-outline-primary"
+                                        onclick="abrirFormularioNotas(@cursada.Id)">
+                                    <i class="bi bi-pencil-square me-1"></i>Cargar notas
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>

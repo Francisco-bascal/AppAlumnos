@@ -21,6 +21,7 @@
                 <tr>
                     <th>@Html.DisplayNameFor(model => model.Nombre)</th>
                     <th>@Html.DisplayNameFor(model => model.Anio)</th>
+                    <th>@Html.DisplayNameFor(model => model.Docente)</th>
                     <th class="text-end">Acciones</th>
                 </tr>
             </thead>
@@ -30,6 +31,9 @@
                     <tr>
                         <td class="align-middle">@item.Nombre</td>
                         <td class="align-middle">@item.Anio° Año</td>
+                        <td class="align-middle">
+                            @(item.Docente != null ? $"{item.Docente.Apellido}, {item.Docente.Nombre}" : "-")
+                        </td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-outline-warning me-1"
                                     onclick="abrirModal('@Url.Action("ObtenerFormulario", "Materias", new

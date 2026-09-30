@@ -9,6 +9,16 @@
 {
     var usuario = await UserManager.GetUserAsync(User);
 
+    <li class="nav-item d-flex align-items-center me-2">
+        @if (!string.IsNullOrEmpty(usuario?.RutaFoto))
+        {
+            <img src="@usuario.RutaFoto" class="rounded-circle avatar-navbar" alt="Foto de perfil" />
+        }
+        else
+        {
+            <img src="~/images/avatars/placeholder.svg" class="rounded-circle avatar-navbar" alt="Foto de perfil" />
+        }
+    </li>
     <li class="nav-item">
         <a id="manage" class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Mi cuenta">Hola @usuario?.Nombre @usuario?.Apellido!</a>
     </li>

@@ -30,6 +30,13 @@
             <span asp-validation-for="Anio" class="text-danger"></span>
 
         </div>
+        <div class="mb-3">
+            <label asp-for="DocenteId" class="form-label"></label>
+            <select asp-for="DocenteId" asp-items="ViewBag.Docentes" class="form-select">
+                <option value="">-- Sin asignar --</option>
+            </select>
+            <span asp-validation-for="DocenteId" class="text-danger"></span>
+        </div>
     </div>
     <div class="modal-footer">
 
