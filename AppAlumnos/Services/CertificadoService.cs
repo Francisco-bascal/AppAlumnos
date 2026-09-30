@@ -1,4 +1,5 @@
 using AppAlumnos.DTOs;
+using AppAlumnos.Exceptions;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -12,9 +13,16 @@ namespace AppAlumnos.Services
         private const string Institucion = "Instituto Superior de Formación Técnica";
         private const string DireccionInstitucion = "Av. de los Estudiantes 1234 - Ciudad";
 
+        private readonly ILogger<CertificadoService> _logger;
+
+        public CertificadoService(ILogger<CertificadoService> logger)
+        {
+            _logger = logger;
+        }
+
         public byte[] GenerarCertificadoAlumnoRegular(string apellidoNombre, string dni, int anioLectivo)
         {
-            return Document.Create(container =>
+            return GenerarDocumento(container =>
             {
                 container.Page(page =>
                 {
@@ -77,7 +85,7 @@ namespace AppAlumnos.Services
                         });
                     });
                 });
-            }).GeneratePdf();
+            }, "certificado-alumno-regular");
         }
 
         public byte[] GenerarCertificadoMateriasAprobadas(
@@ -85,7 +93,7 @@ namespace AppAlumnos.Services
             string dni,
             IReadOnlyCollection<MateriaAprobadaDto> materias)
         {
-            return Document.Create(container =>
+            return GenerarDocumento(container =>
             {
                 container.Page(page =>
                 {
@@ -169,7 +177,7 @@ namespace AppAlumnos.Services
                         });
                     });
                 });
-            }).GeneratePdf();
+            }, "certificado-materias-aprobadas");
         }
 
         public byte[] GenerarListadoInscriptos(
@@ -177,7 +185,7 @@ namespace AppAlumnos.Services
             int anioLectivo,
             IReadOnlyCollection<InscriptoNotasDto> inscriptos)
         {
-            return Document.Create(container =>
+            return GenerarDocumento(container =>
             {
                 container.Page(page =>
                 {
@@ -262,7 +270,20 @@ namespace AppAlumnos.Services
                         });
                     });
                 });
-            }).GeneratePdf();
+            }, "listado-inscriptos");
+        }
+
+        private byte[] GenerarDocumento(Action<IDocumentContainer> contenido, string nombreDocumento)
+        {
+            try
+            {
+                return Document.Create(contenido).GeneratePdf();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo generar el documento {Documento}.", nombreDocumento);
+                throw new FalloGeneracionDocumentoException("No se pudo generar el documento.", ex);
+            }
         }
 
         private static IContainer CeldaCabecera(IContainer container)

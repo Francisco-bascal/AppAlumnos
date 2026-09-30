@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Crash dumps generados por el diagnostico de fallos en desarrollo
+*.dmp

@@ -15,7 +15,10 @@
       "launchBrowser": true,
       "applicationUrl": "http://localhost:5098",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_DbgEnableMiniDump": "1",
+        "DOTNET_DbgMiniDumpType": "2",
+        "DOTNET_DbgMiniDumpName": "AppAlumnos.dmp"
       }
     },
     "https": {
@@ -24,14 +27,20 @@
       "launchBrowser": true,
       "applicationUrl": "https://localhost:7197;http://localhost:5098",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_DbgEnableMiniDump": "1",
+        "DOTNET_DbgMiniDumpType": "2",
+        "DOTNET_DbgMiniDumpName": "AppAlumnos.dmp"
       }
     },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DOTNET_DbgEnableMiniDump": "1",
+        "DOTNET_DbgMiniDumpType": "2",
+        "DOTNET_DbgMiniDumpName": "AppAlumnos.dmp"
       }
     }
   }

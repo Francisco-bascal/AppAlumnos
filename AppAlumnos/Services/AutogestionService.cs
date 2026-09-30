@@ -14,17 +14,20 @@ public class AutogestionService
     private readonly UserManager<Usuario> _userManager;
     private readonly ArchivoService _archivoService;
     private readonly CursadaService _cursadaService;
+    private readonly ILogger<AutogestionService> _logger;
 
     public AutogestionService(
         AppAlumnosContext contexto,
         UserManager<Usuario> userManager,
         ArchivoService archivoService,
-        CursadaService cursadaService)
+        CursadaService cursadaService,
+        ILogger<AutogestionService> logger)
     {
         _contexto = contexto;
         _userManager = userManager;
         _archivoService = archivoService;
         _cursadaService = cursadaService;
+        _logger = logger;
     }
 
     public async Task<List<MateriaDisponibleDto>> ObtenerMateriasDisponiblesAsync(string usuarioId, int anio)
@@ -330,30 +333,47 @@ public class AutogestionService
 
     public async Task<ResultadoOperacionDto> ActualizarAvatarAsync(string usuarioId, IFormFile? foto)
     {
-        var usuario = await _userManager.FindByIdAsync(usuarioId);
-        if (usuario == null)
-        {
-            return new ResultadoOperacionDto(false, "El usuario no existe.");
-        }
-
+        // El archivo se valida y guarda antes de consultar la base para no pagar
+        // una consulta cuando la imagen ya es inválida.
         var resultado = await _archivoService.GuardarAvatarAsync(foto);
         if (!resultado.Ok)
         {
             return resultado;
         }
 
-        if (!string.IsNullOrEmpty(usuario.RutaFoto) &&
-            !string.Equals(usuario.RutaFoto, resultado.RutaRelativa, StringComparison.OrdinalIgnoreCase))
-        {
-            _archivoService.EliminarAvatar(usuario.RutaFoto);
-        }
-
-        usuario.RutaFoto = resultado.RutaRelativa;
-        var actualizado = await _userManager.UpdateAsync(usuario);
-        if (!actualizado.Succeeded)
+        var usuario = await _userManager.FindByIdAsync(usuarioId);
+        if (usuario == null)
         {
             _archivoService.EliminarAvatar(resultado.RutaRelativa);
+            return new ResultadoOperacionDto(false, "El usuario no existe.");
+        }
+
+        var rutaFotoAnterior = usuario.RutaFoto;
+        usuario.RutaFoto = resultado.RutaRelativa;
+
+        try
+        {
+            var actualizado = await _userManager.UpdateAsync(usuario);
+            if (!actualizado.Succeeded)
+            {
+                usuario.RutaFoto = rutaFotoAnterior;
+                _archivoService.EliminarAvatar(resultado.RutaRelativa);
+                return new ResultadoOperacionDto(false, "No se pudo actualizar la foto de perfil.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar la foto de perfil del usuario {UsuarioId}.", usuarioId);
+            usuario.RutaFoto = rutaFotoAnterior;
+            _archivoService.EliminarAvatar(resultado.RutaRelativa);
             return new ResultadoOperacionDto(false, "No se pudo actualizar la foto de perfil.");
+        }
+
+        // El avatar anterior solo se borra cuando el nuevo ya está confirmado en la base.
+        if (!string.IsNullOrEmpty(rutaFotoAnterior) &&
+            !string.Equals(rutaFotoAnterior, resultado.RutaRelativa, StringComparison.OrdinalIgnoreCase))
+        {
+            _archivoService.EliminarAvatar(rutaFotoAnterior);
         }
 
         var exito = new ResultadoOperacionDto(true, "Foto de perfil actualizada.");

@@ -6,7 +6,7 @@
     var esDocente = User.IsInRole("Docente");
     var esAdministrador = User.IsInRole("Administrador");
 
-    ViewData["Title"] = esAdministrador ? "Panel Administrativo" : esDocente ? "Mi GestiÃ³n" : "Portal de AutogestiÃ³n";
+    ViewData["Title"] = esAdministrador ? "Panel Administrativo" : esDocente ? "Mi Gestión" : "Portal de Autogestión";
     var usuario = await UserManager.GetUserAsync(User);
 }
 
@@ -14,7 +14,7 @@
 
 <div class="text-center mb-4">
     <h2 class="mb-1">@ViewData["Title"]</h2>
-    <p class="text-muted mb-0">Hola @(usuario?.Nombre) @(usuario?.Apellido), elegÃ­ una opciÃ³n para comenzar.</p>
+    <p class="text-muted mb-0">Hola @(usuario?.Nombre) @(usuario?.Apellido), elegí una opción para comenzar.</p>
 </div>
 
 <div class="row g-3 justify-content-center">
@@ -26,8 +26,8 @@
                     onclick="cargarPortal('@Url.Action("InscripcionMaterias", "Autogestion")')">
                 <div class="card-body">
                     <i class="bi bi-journal-plus fs-1 text-primary"></i>
-                    <h6 class="card-title mt-3 mb-1">InscripciÃ³n a materias</h6>
-                    <small class="text-muted">Inscribite a las materias del aÃ±o lectivo actual.</small>
+                    <h6 class="card-title mt-3 mb-1">Inscripción a materias</h6>
+                    <small class="text-muted">Inscribite a las materias del año lectivo actual.</small>
                 </div>
             </button>
         </div>
@@ -36,8 +36,8 @@
                     onclick="cargarPortal('@Url.Action("HistoriaAcademica", "Autogestion")')">
                 <div class="card-body">
                     <i class="bi bi-clipboard-data fs-1 text-primary"></i>
-                    <h6 class="card-title mt-3 mb-1">Historia acadÃ©mica</h6>
-                    <small class="text-muted">ConsultÃ¡ tus cursadas, notas y estados por aÃ±o.</small>
+                    <h6 class="card-title mt-3 mb-1">Historia académica</h6>
+                    <small class="text-muted">Consultá tus cursadas, notas y estados por año.</small>
                 </div>
             </button>
         </div>
@@ -47,7 +47,7 @@
                 <div class="card-body">
                     <i class="bi bi-award fs-1 text-primary"></i>
                     <h6 class="card-title mt-3 mb-1">Solicitar documentos</h6>
-                    <small class="text-muted">DescargÃ¡ tu certificado de alumno regular y materias aprobadas.</small>
+                    <small class="text-muted">Descargá tu certificado de alumno regular y materias aprobadas.</small>
                 </div>
             </button>
         </div>
@@ -61,7 +61,7 @@
                 <div class="card-body">
                     <i class="bi bi-book fs-1 text-primary"></i>
                     <h6 class="card-title mt-3 mb-1">Mis materias e inscriptos</h6>
-                    <small class="text-muted">ConsultÃ¡ tus materias y los alumnos inscriptos.</small>
+                    <small class="text-muted">Consultá tus materias y los alumnos inscriptos.</small>
                 </div>
             </button>
         </div>
@@ -71,7 +71,7 @@
                 <div class="card-body">
                     <i class="bi bi-pencil-square fs-1 text-primary"></i>
                     <h6 class="card-title mt-3 mb-1">Cargar notas y estado</h6>
-                    <small class="text-muted">RegistrÃ¡ calificaciones y estados de cursada.</small>
+                    <small class="text-muted">Registrá calificaciones y estados de cursada.</small>
                 </div>
             </button>
         </div>
@@ -81,7 +81,7 @@
                 <div class="card-body">
                     <i class="bi bi-printer fs-1 text-primary"></i>
                     <h6 class="card-title mt-3 mb-1">Listado imprimible</h6>
-                    <small class="text-muted">GenerÃ¡ listados de inscriptos para imprimir o descargar en PDF.</small>
+                    <small class="text-muted">Generá listados de inscriptos para imprimir o descargar en PDF.</small>
                 </div>
             </button>
         </div>
@@ -95,7 +95,7 @@
                 <div class="card-body">
                     <i class="bi bi-journal-plus fs-1 text-primary"></i>
                     <h6 class="card-title mt-3 mb-1">Gestionar materias</h6>
-                    <small class="text-muted">Alta, ediciÃ³n y baja de materias y asignaciÃ³n de docentes.</small>
+                    <small class="text-muted">Alta, edición y baja de materias y asignación de docentes.</small>
                 </div>
             </a>
         </div>
@@ -105,7 +105,7 @@
                 <div class="card-body">
                     <i class="bi bi-people fs-1 text-primary"></i>
                     <h6 class="card-title mt-3 mb-1">Gestionar inscripciones</h6>
-                    <small class="text-muted">InscribÃ­ alumnos, modificÃ¡ o eliminÃ¡ cursadas y cargÃ¡ sus notas.</small>
+                    <small class="text-muted">Inscribí alumnos, modificá o eliminá cursadas y cargá sus notas.</small>
                 </div>
             </a>
         </div>
@@ -115,7 +115,7 @@
                 <div class="card-body">
                     <i class="bi bi-person-gear fs-1 text-primary"></i>
                     <h6 class="card-title mt-3 mb-1">Gestionar usuarios</h6>
-                    <small class="text-muted">CreÃ¡ usuarios, asignÃ¡ roles y activÃ¡ o desactivÃ¡ cuentas.</small>
+                    <small class="text-muted">Creá usuarios, asigná roles y activá o desactivá cuentas.</small>
                 </div>
             </a>
         </div>
@@ -127,7 +127,7 @@
             <div class="card-body">
                 <i class="bi bi-person-circle fs-1 text-primary"></i>
                 <h6 class="card-title mt-3 mb-1">Mi perfil</h6>
-                <small class="text-muted">ActualizÃ¡ tu foto de perfil y consultÃ¡ tus datos.</small>
+                <small class="text-muted">Consultá tus datos.</small>
             </div>
         </button>
     </div>
@@ -183,7 +183,7 @@
                 .then(data => {
                     if (data.success) {
                         modalPortalElement.hide();
-                        Swal.fire('Â¡Listo!', data.mensaje, 'success');
+                        Swal.fire('¡Listo!', data.mensaje, 'success');
                         cargarPortal(urlReload);
                     } else {
                         Swal.fire('Error', data.mensaje, 'error');
@@ -193,13 +193,13 @@
 
         function inscribirse(materiaId) {
             Swal.fire({
-                title: 'Â¿ConfirmÃ¡s la inscripciÃ³n?',
-                text: 'Se registrarÃ¡ tu inscripciÃ³n para el aÃ±o lectivo actual.',
+                title: '¿Confirmás la inscripción?',
+                text: 'Se registrará tu inscripción para el año lectivo actual.',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#6c757d',
-                confirmButtonText: 'SÃ­, inscribirme',
+                confirmButtonText: 'Sí, inscribirme',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (!result.isConfirmed) return;
@@ -216,7 +216,7 @@
                     .then(res => res.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire('Â¡Inscripto!', data.mensaje, 'success');
+                            Swal.fire('¡Inscripto!', data.mensaje, 'success');
                             cargarPortal('@Url.Action("InscripcionMaterias", "Autogestion")');
                         } else {
                             Swal.fire('Error', data.mensaje, 'error');
@@ -249,55 +249,6 @@
 
         function descargarCertificado(tipo) {
             window.open('@Url.Action("GenerarCertificado", "Autogestion")' + '?tipo=' + tipo, '_blank');
-        }
-
-        function previsualizarAvatar(input) {
-            if (!input.files || !input.files[0]) return;
-
-            const archivo = input.files[0];
-            if (archivo.size > 2 * 1024 * 1024) {
-                Swal.fire('Error', 'La imagen supera el tamaÃ±o mÃ¡ximo de 2 MB.', 'error');
-                input.value = '';
-                return;
-            }
-
-            const extensionesValidas = ['jpg', 'jpeg', 'png', 'webp'];
-            const extension = archivo.name.split('.').pop().toLowerCase();
-            if (!extensionesValidas.includes(extension)) {
-                Swal.fire('Error', 'Formato no permitido. UsÃ¡ JPG, PNG o WebP.', 'error');
-                input.value = '';
-                return;
-            }
-
-            const lector = new FileReader();
-            lector.onload = function (e) {
-                const img = document.getElementById('avatarPreview');
-                if (img) img.src = e.target.result;
-            };
-            lector.readAsDataURL(archivo);
-        }
-
-        function subirAvatar(event) {
-            event.preventDefault();
-            const form = event.target;
-
-            fetch(form.action, {
-                method: 'POST',
-                body: new FormData(form)
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire('Â¡Foto actualizada!', data.mensaje, 'success');
-                        const img = document.getElementById('avatarPreview');
-                        if (img && data.rutaFoto) {
-                            img.src = data.rutaFoto + '?v=' + Date.now();
-                        }
-                        cargarPortal('@Url.Action("MiPerfil", "Autogestion")');
-                    } else {
-                        Swal.fire('Error', data.mensaje, 'error');
-                    }
-                });
         }
     </script>
 }

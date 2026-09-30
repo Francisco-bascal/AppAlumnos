@@ -1,4 +1,5 @@
 using AppAlumnos.DTOs;
+using AppAlumnos.Exceptions;
 using AppAlumnos.Models;
 using AppAlumnos.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -14,15 +15,18 @@ namespace AppAlumnos.Controllers
         private readonly AutogestionService _autogestionService;
         private readonly CertificadoService _certificadoService;
         private readonly UserManager<Usuario> _userManager;
+        private readonly ILogger<AutogestionController> _logger;
 
         public AutogestionController(
             AutogestionService autogestionService,
             CertificadoService certificadoService,
-            UserManager<Usuario> userManager)
+            UserManager<Usuario> userManager,
+            ILogger<AutogestionController> logger)
         {
             _autogestionService = autogestionService;
             _certificadoService = certificadoService;
             _userManager = userManager;
+            _logger = logger;
         }
 
         // GET: Autogestion/Index
@@ -121,8 +125,15 @@ namespace AppAlumnos.Controllers
                     return Json(new { success = false, mensaje = "No consta tu condición de alumno regular en el año actual." });
                 }
 
-                var pdf = _certificadoService.GenerarCertificadoAlumnoRegular(apellidoNombre, perfil.Dni.ToString(), anioActual);
-                return File(pdf, "application/pdf", $"certificado-alumno-regular-{anioActual}.pdf");
+                try
+                {
+                    var pdf = _certificadoService.GenerarCertificadoAlumnoRegular(apellidoNombre, perfil.Dni.ToString(), anioActual);
+                    return File(pdf, "application/pdf", $"certificado-alumno-regular-{anioActual}.pdf");
+                }
+                catch (FalloGeneracionDocumentoException)
+                {
+                    return Json(new { success = false, mensaje = "No se pudo generar el certificado. Intentá nuevamente." });
+                }
             }
 
             if (tipo == "materias")
@@ -133,8 +144,15 @@ namespace AppAlumnos.Controllers
                     return Json(new { success = false, mensaje = "Todavía no tenés materias aprobadas para certificar." });
                 }
 
-                var pdf = _certificadoService.GenerarCertificadoMateriasAprobadas(apellidoNombre, perfil.Dni.ToString(), materias);
-                return File(pdf, "application/pdf", "certificado-materias-aprobadas.pdf");
+                try
+                {
+                    var pdf = _certificadoService.GenerarCertificadoMateriasAprobadas(apellidoNombre, perfil.Dni.ToString(), materias);
+                    return File(pdf, "application/pdf", "certificado-materias-aprobadas.pdf");
+                }
+                catch (FalloGeneracionDocumentoException)
+                {
+                    return Json(new { success = false, mensaje = "No se pudo generar el certificado. Intentá nuevamente." });
+                }
             }
 
             return Json(new { success = false, mensaje = "Tipo de certificado no válido." });
@@ -239,8 +257,15 @@ namespace AppAlumnos.Controllers
             var (materia, inscriptos) = await _autogestionService.ObtenerListadoInscriptosAsync(materiaId, usuario.Id);
             if (materia == null) return NotFound();
 
-            var pdf = _certificadoService.GenerarListadoInscriptos(materia.Nombre, DateTime.Today.Year, inscriptos);
-            return File(pdf, "application/pdf", $"listado-inscriptos-{materia.Nombre}.pdf");
+            try
+            {
+                var pdf = _certificadoService.GenerarListadoInscriptos(materia.Nombre, DateTime.Today.Year, inscriptos);
+                return File(pdf, "application/pdf", $"listado-inscriptos-{materia.Nombre}.pdf");
+            }
+            catch (FalloGeneracionDocumentoException)
+            {
+                return Json(new { success = false, mensaje = "No se pudo generar el listado. Intentá nuevamente." });
+            }
         }
 
         #endregion
@@ -268,7 +293,22 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
+            // Sin estas trazas el rechazo solo era visible en la alerta del navegador,
+            // lo que dejaba sin diagnóstico cualquier fallo de la subida.
+            _logger.LogInformation(
+                "Subida de avatar solicitada. Usuario: {UsuarioId}, Archivo: {NombreArchivo}, TamanoBytes: {TamanoBytes}",
+                usuario.Id,
+                foto?.FileName ?? "(sin archivo)",
+                foto?.Length ?? 0);
+
             var resultado = await _autogestionService.ActualizarAvatarAsync(usuario.Id, foto);
+
+            _logger.LogInformation(
+                "Subida de avatar finalizada. Usuario: {UsuarioId}, Exito: {Exito}, Mensaje: {Mensaje}",
+                usuario.Id,
+                resultado.Ok,
+                resultado.Mensaje);
+
             return Json(new { success = resultado.Ok, mensaje = resultado.Mensaje, rutaFoto = resultado.RutaRelativa });
         }
 
