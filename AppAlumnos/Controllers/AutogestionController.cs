@@ -1,33 +1,28 @@
-using AppAlumnos.Data;
+using AppAlumnos.DTOs;
 using AppAlumnos.Models;
 using AppAlumnos.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
-using System.Globalization;
 
 namespace AppAlumnos.Controllers
 {
     [Authorize]
     public class AutogestionController : Controller
     {
-        private readonly AppAlumnosContext _contexto;
-        private readonly UserManager<Usuario> _userManager;
-        private readonly ArchivoService _archivoService;
+        private readonly AutogestionService _autogestionService;
         private readonly CertificadoService _certificadoService;
+        private readonly UserManager<Usuario> _userManager;
 
         public AutogestionController(
-            AppAlumnosContext contexto,
-            UserManager<Usuario> userManager,
-            ArchivoService archivoService,
-            CertificadoService certificadoService)
+            AutogestionService autogestionService,
+            CertificadoService certificadoService,
+            UserManager<Usuario> userManager)
         {
-            _contexto = contexto;
-            _userManager = userManager;
-            _archivoService = archivoService;
+            _autogestionService = autogestionService;
             _certificadoService = certificadoService;
+            _userManager = userManager;
         }
 
         // GET: Autogestion/Index
@@ -42,22 +37,12 @@ namespace AppAlumnos.Controllers
         [Authorize(Roles = "Alumno,Administrador")]
         public async Task<IActionResult> InscripcionMaterias()
         {
-            var anioActual = DateTime.Today.Year;
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var inscriptas = await _contexto.Cursadas
-                .Where(c => c.UsuarioId == usuario.Id && c.AnioLectivo == anioActual)
-                .Select(c => c.MateriaId)
-                .ToListAsync();
-
-            var materias = await _contexto.Materias
-                .Where(m => !inscriptas.Contains(m.Id))
-                .OrderBy(m => m.Anio)
-                .ThenBy(m => m.Nombre)
-                .ToListAsync();
-
+            var anioActual = DateTime.Today.Year;
             ViewBag.AnioActual = anioActual;
+            var materias = await _autogestionService.ObtenerMateriasDisponiblesAsync(usuario.Id, anioActual);
             return PartialView("_InscripcionMateriasPartial", materias);
         }
 
@@ -70,40 +55,8 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var materia = await _contexto.Materias.FindAsync(materiaId);
-            if (materia == null)
-            {
-                return Json(new { success = false, mensaje = "La materia no existe." });
-            }
-
-            var anioActual = DateTime.Today.Year;
-
-            if (await _contexto.Cursadas.AnyAsync(c =>
-                    c.UsuarioId == usuario.Id &&
-                    c.MateriaId == materiaId &&
-                    c.AnioLectivo == anioActual))
-            {
-                return Json(new { success = false, mensaje = "Ya te encuentras inscripto/a en esta materia para el año actual." });
-            }
-
-            _contexto.Cursadas.Add(new Cursada
-            {
-                UsuarioId = usuario.Id,
-                MateriaId = materiaId,
-                AnioLectivo = anioActual,
-                Estado = EstadoCursada.Cursando
-            });
-
-            try
-            {
-                await _contexto.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                return Json(new { success = false, mensaje = "Ya te encuentras inscripto/a en esta materia para el año actual." });
-            }
-
-            return Json(new { success = true, mensaje = $"Inscripción confirmada en {materia.Nombre}." });
+            var resultado = await _autogestionService.InscribirseAsync(usuario.Id, materiaId, DateTime.Today.Year);
+            return Json(new { success = resultado.Ok, mensaje = resultado.Mensaje });
         }
 
         // GET: Autogestion/HistoriaAcademica?anio=&estado=
@@ -113,33 +66,7 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var consulta = _contexto.Cursadas
-                .AsNoTracking()
-                .Include(c => c.Materia)
-                .Where(c => c.UsuarioId == usuario.Id);
-
-            if (anio.HasValue)
-            {
-                consulta = consulta.Where(c => c.AnioLectivo == anio.Value);
-            }
-
-            if (estado.HasValue)
-            {
-                consulta = consulta.Where(c => c.Estado == estado.Value);
-            }
-
-            var cursadas = await consulta
-                .OrderByDescending(c => c.AnioLectivo)
-                .ThenBy(c => c.Materia.Nombre)
-                .ToListAsync();
-
-            var anios = await _contexto.Cursadas
-                .AsNoTracking()
-                .Where(c => c.UsuarioId == usuario.Id)
-                .Select(c => c.AnioLectivo)
-                .Distinct()
-                .OrderByDescending(a => a)
-                .ToListAsync();
+            var (cursadas, anios) = await _autogestionService.ObtenerHistoriaAsync(usuario.Id, anio, estado);
 
             ViewBag.Anios = anios;
             ViewBag.AnioSeleccionado = anio;
@@ -154,15 +81,8 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var cursadas = await _contexto.Cursadas
-                .AsNoTracking()
-                .Include(c => c.Materia)
-                .Where(c => c.UsuarioId == usuario.Id)
-                .OrderByDescending(c => c.AnioLectivo)
-                .ThenBy(c => c.Materia.Nombre)
-                .ToListAsync();
-
-            ViewBag.Titular = $"{usuario.Apellido}, {usuario.Nombre} - DNI {usuario.Dni}";
+            var (cursadas, titular) = await _autogestionService.ObtenerHistoriaParaImprimirAsync(usuario.Id);
+            ViewBag.Titular = titular;
             return View(cursadas);
         }
 
@@ -173,21 +93,11 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var anioActual = DateTime.Today.Year;
+            var info = await _autogestionService.ObtenerInfoCertificadosAsync(usuario.Id);
 
-            var esRegular = await _contexto.Cursadas.AnyAsync(c =>
-                c.UsuarioId == usuario.Id &&
-                c.AnioLectivo == anioActual &&
-                (c.Estado == EstadoCursada.Cursando || c.Estado == EstadoCursada.Regular));
-
-            var materiasAprobadas = await _contexto.Cursadas.CountAsync(c =>
-                c.UsuarioId == usuario.Id &&
-                c.Estado == EstadoCursada.Aprobada);
-
-            ViewBag.EsRegular = esRegular;
-            ViewBag.AnioActual = anioActual;
-            ViewBag.MateriasAprobadas = materiasAprobadas;
-            ViewBag.EsAdministrador = User.IsInRole("Administrador");
+            ViewBag.EsRegular = info.EsRegular;
+            ViewBag.AnioActual = info.AnioActual;
+            ViewBag.MateriasAprobadas = info.MateriasAprobadas;
             return PartialView("_CertificadosPartial");
         }
 
@@ -198,47 +108,33 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var apellidoNombre = $"{usuario.Apellido}, {usuario.Nombre}";
+            var perfil = await _autogestionService.ObtenerPerfilAsync(usuario.Id);
+            if (perfil == null) return Challenge();
+
+            var apellidoNombre = $"{perfil.Apellido}, {perfil.Nombre}";
             var anioActual = DateTime.Today.Year;
 
             if (tipo == "regular")
             {
-                var esRegular = await _contexto.Cursadas.AnyAsync(c =>
-                    c.UsuarioId == usuario.Id &&
-                    c.AnioLectivo == anioActual &&
-                    (c.Estado == EstadoCursada.Cursando || c.Estado == EstadoCursada.Regular));
-
-                if (!esRegular)
+                if (!await _autogestionService.EsAlumnoRegularAsync(usuario.Id, anioActual))
                 {
                     return Json(new { success = false, mensaje = "No consta tu condición de alumno regular en el año actual." });
                 }
 
-                var pdf = _certificadoService.GenerarCertificadoAlumnoRegular(apellidoNombre, usuario.Dni.ToString(), anioActual);
+                var pdf = _certificadoService.GenerarCertificadoAlumnoRegular(apellidoNombre, perfil.Dni.ToString(), anioActual);
                 return File(pdf, "application/pdf", $"certificado-alumno-regular-{anioActual}.pdf");
             }
 
             if (tipo == "materias")
             {
-                var materias = await _contexto.Cursadas
-                    .AsNoTracking()
-                    .Include(c => c.Materia)
-                    .Where(c => c.UsuarioId == usuario.Id && c.Estado == EstadoCursada.Aprobada)
-                    .OrderBy(c => c.AnioLectivo)
-                    .ThenBy(c => c.Materia.Nombre)
-                    .Select(c => new { c.Materia.Nombre, Nota = c.Nota ?? 0, c.AnioLectivo })
-                    .ToListAsync();
-
+                var materias = await _autogestionService.ObtenerMateriasAprobadasAsync(usuario.Id);
                 if (materias.Count == 0)
                 {
                     return Json(new { success = false, mensaje = "Todavía no tenés materias aprobadas para certificar." });
                 }
 
-                var listaMaterias = materias
-                    .Select(m => (Materia: m.Nombre, m.Nota, Anio: m.AnioLectivo))
-                    .ToList();
-
-                var pdf = _certificadoService.GenerarCertificadoMateriasAprobadas(apellidoNombre, usuario.Dni.ToString(), listaMaterias);
-                return File(pdf, "application/pdf", $"certificado-materias-aprobadas.pdf");
+                var pdf = _certificadoService.GenerarCertificadoMateriasAprobadas(apellidoNombre, perfil.Dni.ToString(), materias);
+                return File(pdf, "application/pdf", "certificado-materias-aprobadas.pdf");
             }
 
             return Json(new { success = false, mensaje = "Tipo de certificado no válido." });
@@ -255,19 +151,9 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            IQueryable<Materia> consulta = _contexto.Materias.AsNoTracking();
-
-            if (!User.IsInRole("Administrador"))
-            {
-                consulta = consulta.Where(m => m.DocenteId == usuario.Id);
-            }
-
-            var materias = await consulta
-                .OrderBy(m => m.Anio)
-                .ThenBy(m => m.Nombre)
-                .ToListAsync();
-
-            ViewBag.EsAdministrador = User.IsInRole("Administrador");
+            var esAdministrador = User.IsInRole("Administrador");
+            ViewBag.EsAdministrador = esAdministrador;
+            var materias = await _autogestionService.ObtenerMisMateriasAsync(usuario.Id, esAdministrador);
             return PartialView("_MisMateriasPartial", materias);
         }
 
@@ -275,16 +161,14 @@ namespace AppAlumnos.Controllers
         [Authorize(Roles = "Docente,Administrador")]
         public async Task<IActionResult> Inscriptos(int materiaId)
         {
-            var materia = await ObtenerMateriaAutorizadaAsync(materiaId);
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario == null) return Challenge();
+
+            var esAdministrador = User.IsInRole("Administrador");
+            var materia = await _autogestionService.ObtenerMateriaAutorizadaAsync(materiaId, usuario.Id, esAdministrador);
             if (materia == null) return NotFound();
 
-            var inscriptos = await _contexto.Cursadas
-                .AsNoTracking()
-                .Include(c => c.Usuario)
-                .Where(c => c.MateriaId == materiaId)
-                .OrderBy(c => c.Usuario.Apellido)
-                .ThenBy(c => c.Usuario.Nombre)
-                .ToListAsync();
+            var inscriptos = await _autogestionService.ObtenerInscriptosAsync(materiaId);
 
             ViewBag.MateriaNombre = materia.Nombre;
             ViewBag.MateriaId = materiaId;
@@ -295,23 +179,15 @@ namespace AppAlumnos.Controllers
         [Authorize(Roles = "Docente,Administrador")]
         public async Task<IActionResult> ObtenerFormularioNotas(int cursadaId)
         {
-            var cursada = await _contexto.Cursadas
-                .AsNoTracking()
-                .Include(c => c.Usuario)
-                .Include(c => c.Materia)
-                .FirstOrDefaultAsync(c => c.Id == cursadaId);
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario == null) return Challenge();
 
-            if (cursada == null) return NotFound();
+            var esAdministrador = User.IsInRole("Administrador");
+            var (existe, autorizado, dto) = await _autogestionService.ObtenerFormularioNotasAsync(cursadaId, usuario.Id, esAdministrador);
+            if (!existe) return NotFound();
+            if (!autorizado) return Forbid();
 
-            if (!User.IsInRole("Administrador"))
-            {
-                var usuario = await _userManager.GetUserAsync(User);
-                if (usuario == null || cursada.Materia.DocenteId != usuario.Id) return Forbid();
-            }
-
-            ViewBag.AlumnoNombre = $"{cursada.Usuario.Apellido}, {cursada.Usuario.Nombre}";
-            ViewBag.MateriaNombre = cursada.Materia.Nombre;
-            return PartialView("_FormularioNotasPortalPartial", cursada);
+            return PartialView("_FormularioNotasPortalPartial", dto);
         }
 
         // POST: Autogestion/GuardarNotas
@@ -320,44 +196,11 @@ namespace AppAlumnos.Controllers
         [Authorize(Roles = "Docente,Administrador")]
         public async Task<IActionResult> GuardarNotas(int id, string nota, EstadoCursada estado)
         {
-            var cursada = await _contexto.Cursadas
-                .Include(c => c.Materia)
-                .FirstOrDefaultAsync(c => c.Id == id);
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario == null) return Challenge();
 
-            if (cursada == null)
-            {
-                return Json(new { success = false, mensaje = "La cursada no existe." });
-            }
-
-            if (!User.IsInRole("Administrador"))
-            {
-                var usuario = await _userManager.GetUserAsync(User);
-                if (usuario == null || cursada.Materia.DocenteId != usuario.Id)
-                {
-                    return Json(new { success = false, mensaje = "No tenés permisos para cargar notas en esta materia." });
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(nota))
-            {
-                var parseado = decimal.TryParse(nota, NumberStyles.Number, CultureInfo.InvariantCulture, out var valorNota)
-                    || decimal.TryParse(nota, NumberStyles.Number, CultureInfo.CurrentCulture, out valorNota);
-
-                if (!parseado || valorNota < 1 || valorNota > 10)
-                {
-                    return Json(new { success = false, mensaje = "Ingrese una nota válida entre 1 y 10." });
-                }
-                cursada.Nota = valorNota;
-            }
-            else
-            {
-                cursada.Nota = null;
-            }
-
-            cursada.Estado = estado;
-            await _contexto.SaveChangesAsync();
-
-            return Json(new { success = true, mensaje = "Notas guardadas correctamente." });
+            var resultado = await _autogestionService.GuardarNotasAsync(id, nota, estado, usuario.Id, User.IsInRole("Administrador"));
+            return Json(new { success = resultado.Ok, mensaje = resultado.Mensaje });
         }
 
         // GET: Autogestion/SeleccionarListado
@@ -367,14 +210,8 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            IQueryable<Materia> consulta = _contexto.Materias.AsNoTracking().OrderBy(m => m.Nombre);
-
-            if (!User.IsInRole("Administrador"))
-            {
-                consulta = consulta.Where(m => m.DocenteId == usuario.Id);
-            }
-
-            var materias = await consulta.ToListAsync();
+            var esAdministrador = User.IsInRole("Administrador");
+            var materias = await _autogestionService.ObtenerMateriasParaSeleccionAsync(usuario.Id, esAdministrador);
 
             ViewBag.Materias = new SelectList(materias, "Id", "Nombre");
             return PartialView("_SeleccionarListadoPartial");
@@ -384,21 +221,17 @@ namespace AppAlumnos.Controllers
         [Authorize(Roles = "Docente,Administrador")]
         public async Task<IActionResult> ListadoInscriptos(int materiaId)
         {
-            var materia = await ObtenerMateriaAutorizadaAsync(materiaId);
-            if (materia == null) return NotFound();
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario == null) return Challenge();
 
-            var inscriptos = await _contexto.Cursadas
-                .AsNoTracking()
-                .Include(c => c.Usuario)
-                .Where(c => c.MateriaId == materiaId)
-                .OrderBy(c => c.Usuario.Apellido)
-                .ThenBy(c => c.Usuario.Nombre)
-                .ToListAsync();
+            var esAdministrador = User.IsInRole("Administrador");
+            var (materia, inscriptos) = await _autogestionService.ObtenerListadoInscriptosAsync(materiaId, usuario.Id, esAdministrador);
+            if (materia == null) return NotFound();
 
             ViewBag.MateriaNombre = materia.Nombre;
             ViewBag.Cantidad = inscriptos.Count;
-            var usuarioActual = await _userManager.GetUserAsync(User);
-            ViewBag.DocenteNombre = usuarioActual != null ? $"{usuarioActual.Apellido}, {usuarioActual.Nombre}" : "";
+            var perfil = await _autogestionService.ObtenerPerfilAsync(usuario.Id);
+            ViewBag.DocenteNombre = perfil != null ? $"{perfil.Apellido}, {perfil.Nombre}" : "";
             return View(inscriptos);
         }
 
@@ -406,30 +239,14 @@ namespace AppAlumnos.Controllers
         [Authorize(Roles = "Docente,Administrador")]
         public async Task<IActionResult> DescargarListadoPdf(int materiaId)
         {
-            var materia = await ObtenerMateriaAutorizadaAsync(materiaId);
+            var usuario = await _userManager.GetUserAsync(User);
+            if (usuario == null) return Challenge();
+
+            var esAdministrador = User.IsInRole("Administrador");
+            var (materia, inscriptos) = await _autogestionService.ObtenerListadoInscriptosAsync(materiaId, usuario.Id, esAdministrador);
             if (materia == null) return NotFound();
 
-            var inscriptos = await _contexto.Cursadas
-                .AsNoTracking()
-                .Include(c => c.Usuario)
-                .Where(c => c.MateriaId == materiaId)
-                .OrderBy(c => c.Usuario.Apellido)
-                .ThenBy(c => c.Usuario.Nombre)
-                .Select(c => new
-                {
-                    ApellidoNombre = c.Usuario.Apellido + ", " + c.Usuario.Nombre,
-                    c.Nota,
-                    Estado = c.Estado.ToString()
-                })
-                .ToListAsync();
-
-            var pdf = _certificadoService.GenerarListadoInscriptos(
-                materia.Nombre,
-                DateTime.Today.Year,
-                inscriptos
-                    .Select(x => (x.ApellidoNombre, x.Nota, x.Estado))
-                    .ToList());
-
+            var pdf = _certificadoService.GenerarListadoInscriptos(materia.Nombre, DateTime.Today.Year, inscriptos);
             return File(pdf, "application/pdf", $"listado-inscriptos-{materia.Nombre}.pdf");
         }
 
@@ -443,8 +260,11 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            ViewBag.RolNombre = usuario.Rol;
-            return PartialView("_MiPerfilPartial", usuario);
+            var perfil = await _autogestionService.ObtenerPerfilAsync(usuario.Id);
+            if (perfil == null) return Challenge();
+
+            ViewBag.RolNombre = perfil.Rol;
+            return PartialView("_MiPerfilPartial", perfil);
         }
 
         // POST: Autogestion/SubirAvatar
@@ -455,28 +275,8 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            if (foto == null || foto.Length == 0)
-            {
-                return Json(new { success = false, mensaje = "Seleccioná una imagen." });
-            }
-
-            var resultado = await _archivoService.GuardarAvatarAsync(foto);
-
-            if (!resultado.ok)
-            {
-                return Json(new { success = false, mensaje = resultado.mensaje });
-            }
-
-            if (!string.IsNullOrEmpty(usuario.RutaFoto) &&
-                !string.Equals(usuario.RutaFoto, resultado.rutaRelativa, StringComparison.OrdinalIgnoreCase))
-            {
-                _archivoService.EliminarAvatar(usuario.RutaFoto);
-            }
-
-            usuario.RutaFoto = resultado.rutaRelativa;
-            await _userManager.UpdateAsync(usuario);
-
-            return Json(new { success = true, mensaje = "Foto de perfil actualizada.", rutaFoto = resultado.rutaRelativa });
+            var resultado = await _autogestionService.ActualizarAvatarAsync(usuario.Id, foto);
+            return Json(new { success = resultado.Ok, mensaje = resultado.Mensaje, rutaFoto = resultado.RutaRelativa });
         }
 
         #endregion
@@ -489,22 +289,6 @@ namespace AppAlumnos.Controllers
                     ((int)e).ToString(),
                     seleccionado.HasValue && (int)e == seleccionado.Value))
                 .ToList();
-        }
-
-        private async Task<Materia?> ObtenerMateriaAutorizadaAsync(int materiaId)
-        {
-            var materia = await _contexto.Materias
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m => m.Id == materiaId);
-
-            if (materia == null) return null;
-
-            if (User.IsInRole("Administrador")) return materia;
-
-            var usuario = await _userManager.GetUserAsync(User);
-            if (usuario == null || materia.DocenteId != usuario.Id) return null;
-
-            return materia;
         }
     }
 }

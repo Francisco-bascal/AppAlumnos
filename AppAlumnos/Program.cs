@@ -40,6 +40,10 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddTransient<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender, AppAlumnos.Services.EmailSender>();
 builder.Services.AddTransient<ArchivoService>();
 builder.Services.AddTransient<CertificadoService>();
+builder.Services.AddScoped<MateriaService>();
+builder.Services.AddScoped<CursadaService>();
+builder.Services.AddScoped<AutogestionService>();
+builder.Services.AddScoped<UsuarioService>();
 
 var app = builder.Build();
 

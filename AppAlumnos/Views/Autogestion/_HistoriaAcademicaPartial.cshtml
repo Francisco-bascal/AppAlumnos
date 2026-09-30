@@ -1,4 +1,4 @@
-@model List<AppAlumnos.Models.Cursada>
+@model List<CursadaHistoriaDto>
 @{
     Func<AppAlumnos.Models.EstadoCursada, string> nombreEstado = e => e switch
     {
@@ -67,7 +67,7 @@
                     @foreach (var cursada in Model)
                     {
                         <tr>
-                            <td class="align-middle">@cursada.Materia.Nombre</td>
+                            <td class="align-middle">@cursada.MateriaNombre</td>
                             <td class="align-middle text-center">@cursada.AnioLectivo</td>
                             <td class="align-middle text-center">
                                 @(cursada.Nota.HasValue ? cursada.Nota.Value.ToString("0.#") : "-")

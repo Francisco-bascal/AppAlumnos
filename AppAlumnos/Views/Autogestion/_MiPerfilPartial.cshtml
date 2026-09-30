@@ -1,4 +1,4 @@
-@model AppAlumnos.Models.Usuario
+@model PerfilUsuarioDto
 
 <div class="row g-3 justify-content-center">
     <div class="col-md-9 col-lg-7">
@@ -46,9 +46,9 @@
                     <dt class="col-sm-4">DNI</dt>
                     <dd class="col-sm-8">@Model.Dni</dd>
                     <dt class="col-sm-4">Legajo</dt>
-                    <dd class="col-sm-8">@(Model.Legajo ?? "-")</dd>
+                    <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Legajo) ? "-" : Model.Legajo)</dd>
                     <dt class="col-sm-4">Rol</dt>
-                    <dd class="col-sm-8">@ViewBag.RolNombre</dd>
+                    <dd class="col-sm-8">@Model.Rol</dd>
                 </dl>
             </div>
         </div>

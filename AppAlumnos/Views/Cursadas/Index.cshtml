@@ -1,4 +1,4 @@
-@model IEnumerable<AppAlumnos.Models.Cursada>
+@model IEnumerable<CursadaDto>
 
 @{
     ViewData["Title"] = "Gestión de Cursadas";
@@ -28,8 +28,8 @@
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>@Html.DisplayNameFor(model => model.Usuario)</th>
-                    <th>@Html.DisplayNameFor(model => model.Materia)</th>
+                    <th>Alumno</th>
+                    <th>Materia</th>
                     <th>@Html.DisplayNameFor(model => model.AnioLectivo)</th>
                     <th>@Html.DisplayNameFor(model => model.Nota)</th>
                     <th>@Html.DisplayNameFor(model => model.Estado)</th>
@@ -40,8 +40,8 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td class="align-middle">@item.Usuario.Apellido, @item.Usuario.Nombre</td>
-                        <td class="align-middle">@item.Materia.Nombre</td>
+                        <td class="align-middle">@item.AlumnoNombre</td>
+                        <td class="align-middle">@item.MateriaNombre</td>
                         <td class="align-middle">@item.AnioLectivo</td>
                         <td class="align-middle">
                             @(item.Nota.HasValue ? item.Nota.Value.ToString("0.#") : "-")

@@ -1,15 +1,6 @@
-@model List<AppAlumnos.Models.Cursada>
+@model List<InscriptoNotasDto>
 @{
     ViewData["Title"] = "Listado de Inscriptos";
-    Func<AppAlumnos.Models.EstadoCursada, string> nombreEstado = e => e switch
-    {
-        AppAlumnos.Models.EstadoCursada.Cursando => "Cursando",
-        AppAlumnos.Models.EstadoCursada.Regular => "Regular",
-        AppAlumnos.Models.EstadoCursada.Aprobada => "Aprobada",
-        AppAlumnos.Models.EstadoCursada.Libre => "Libre",
-        AppAlumnos.Models.EstadoCursada.Desaprobada => "Desaprobada",
-        _ => e.ToString()
-    };
     var materiaNombre = ViewBag.MateriaNombre as string;
     var cantidad = (int)ViewBag.Cantidad;
     var docenteNombre = ViewBag.DocenteNombre as string;
@@ -32,12 +23,12 @@
     <tbody>
         @for (var i = 0; i < Model.Count; i++)
         {
-            var cursada = Model[i];
+            var inscripto = Model[i];
             <tr>
                 <td class="text-center">@(i + 1)</td>
-                <td>@cursada.Usuario.Apellido, @cursada.Usuario.Nombre</td>
-                <td class="text-center">@(cursada.Nota.HasValue ? cursada.Nota.Value.ToString("0.#") : "-")</td>
-                <td class="text-center">@nombreEstado(cursada.Estado)</td>
+                <td>@inscripto.ApellidoNombre</td>
+                <td class="text-center">@(inscripto.Nota.HasValue ? inscripto.Nota.Value.ToString("0.#") : "-")</td>
+                <td class="text-center">@inscripto.Estado</td>
             </tr>
         }
     </tbody>

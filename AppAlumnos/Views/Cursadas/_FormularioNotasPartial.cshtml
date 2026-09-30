@@ -1,4 +1,4 @@
-@model AppAlumnos.Models.Cursada
+@model NotasDto
 <div class="modal-header bg-primary text-white">
     <h5 class="modal-title">Cargar Notas</h5>
     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -8,17 +8,18 @@
       onsubmit="guardarNotas(event)">
     @Html.AntiForgeryToken()
     <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="MateriaId" />
     <div class="modal-body">
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <div class="mb-3">
             <label class="form-label">Alumno</label>
-            <input type="text" class="form-control" value="@ViewBag.AlumnoNombre" disabled />
+            <input type="text" class="form-control" value="@Model.AlumnoNombre" disabled />
         </div>
 
         <div class="mb-3">
             <label class="form-label">Materia</label>
-            <input type="text" class="form-control" value="@ViewBag.MateriaNombre" disabled />
+            <input type="text" class="form-control" value="@Model.MateriaNombre" disabled />
         </div>
 
         <div class="mb-3">

@@ -130,7 +130,7 @@ namespace AppAlumnos.Areas.Identity.Pages.Account
 
                 // Legajo, Estado y FechaAlta (si no están en la UI, les damos valor por defecto para que no fallen)
                 user.Legajo = string.IsNullOrEmpty(Input.Legajo) ? "-" : Input.Legajo;
-                user.Estado = Input.Estado;
+                user.Estado = true;
                 user.FechaAlta = Input.FechaAlta == default ? DateTime.Now : Input.FechaAlta;
                 // -----------------------------------------------------------
 

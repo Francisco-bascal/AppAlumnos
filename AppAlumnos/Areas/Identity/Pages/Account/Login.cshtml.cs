@@ -17,11 +17,13 @@ namespace AppAlumnos.Areas.Identity.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly SignInManager<Usuario> _signInManager;
+        private readonly UserManager<Usuario> _userManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<Usuario> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<Usuario> signInManager, UserManager<Usuario> userManager, ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
+            _userManager = userManager;
             _logger = logger;
         }
 
@@ -98,6 +100,14 @@ namespace AppAlumnos.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                // Impide el ingreso de cuentas desactivadas.
+                var usuario = await _userManager.FindByEmailAsync(Input.Email);
+                if (usuario != null && !usuario.Estado)
+                {
+                    ModelState.AddModelError(string.Empty, "Tu cuenta se encuentra desactivada. Contactá a la administración.");
+                    return Page();
+                }
+
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);

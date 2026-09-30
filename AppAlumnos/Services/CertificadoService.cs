@@ -1,3 +1,4 @@
+using AppAlumnos.DTOs;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
@@ -82,7 +83,7 @@ namespace AppAlumnos.Services
         public byte[] GenerarCertificadoMateriasAprobadas(
             string apellidoNombre,
             string dni,
-            IReadOnlyCollection<(string Materia, decimal Nota, int Anio)> materias)
+            IReadOnlyCollection<MateriaAprobadaDto> materias)
         {
             return Document.Create(container =>
             {
@@ -139,7 +140,7 @@ namespace AppAlumnos.Services
                                     ? (Func<IContainer, IContainer>)CeldaFila
                                     : CeldaFilaZebra;
                                 table.Cell().Element(estilo).Text(materia.Anio.ToString());
-                                table.Cell().Element(estilo).Text(materia.Materia);
+                                table.Cell().Element(estilo).Text(materia.Nombre);
                                 table.Cell().Element(estilo).AlignCenter().Text(materia.Nota.ToString("0.#"));
                                 filaCentral++;
                             }
@@ -174,7 +175,7 @@ namespace AppAlumnos.Services
         public byte[] GenerarListadoInscriptos(
             string materiaNombre,
             int anioLectivo,
-            IReadOnlyCollection<(string ApellidoNombre, decimal? Nota, string Estado)> inscriptos)
+            IReadOnlyCollection<InscriptoNotasDto> inscriptos)
         {
             return Document.Create(container =>
             {

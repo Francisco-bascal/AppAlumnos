@@ -1,3 +1,4 @@
+using AppAlumnos.DTOs;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -20,28 +21,28 @@ namespace AppAlumnos.Services
                 _environment = environment;
             }
 
-            public async Task<(bool ok, string mensaje, string? rutaRelativa)> GuardarAvatarAsync(IFormFile archivo)
+            public async Task<ResultadoOperacionDto> GuardarAvatarAsync(IFormFile archivo)
             {
                 if (archivo == null || archivo.Length == 0)
                 {
-                    return (false, "Seleccioná una imagen.", null);
+                    return new ResultadoOperacionDto(false, "Seleccioná una imagen.");
                 }
 
                 if (archivo.Length > TamanoMaximoBytes)
                 {
-                    return (false, "La imagen supera el tamaño máximo de 2 MB.", null);
+                    return new ResultadoOperacionDto(false, "La imagen supera el tamaño máximo de 2 MB.");
                 }
 
                 var extension = Path.GetExtension(archivo.FileName).ToLowerInvariant();
                 if (!ExtensionesPermitidas.Contains(extension))
                 {
-                    return (false, "Formato no permitido. Usá JPG, PNG o WebP.", null);
+                    return new ResultadoOperacionDto(false, "Formato no permitido. Usá JPG, PNG o WebP.");
                 }
 
                 var mimeType = archivo.ContentType.ToLowerInvariant();
                 if (!MimeTypesPermitidos.Contains(mimeType))
                 {
-                    return (false, "El tipo de archivo no es una imagen válida.", null);
+                    return new ResultadoOperacionDto(false, "El tipo de archivo no es una imagen válida.");
                 }
 
                 using var stream = new MemoryStream();
@@ -50,7 +51,7 @@ namespace AppAlumnos.Services
 
                 if (!EsContenidoValido(bytes, extension))
                 {
-                    return (false, "El contenido del archivo no es una imagen válida.", null);
+                    return new ResultadoOperacionDto(false, "El contenido del archivo no es una imagen válida.");
                 }
 
                 var carpeta = Path.Combine(_environment.WebRootPath, "images", "avatars");
@@ -60,7 +61,9 @@ namespace AppAlumnos.Services
                 var rutaFisica = Path.Combine(carpeta, nombreArchivo);
                 await File.WriteAllBytesAsync(rutaFisica, bytes);
 
-                return (true, "Imagen guardada correctamente.", $"/images/avatars/{nombreArchivo}");
+                var resultado = new ResultadoOperacionDto(true, "Imagen guardada correctamente.");
+                resultado.RutaRelativa = $"/images/avatars/{nombreArchivo}";
+                return resultado;
             }
 
             public void EliminarAvatar(string? rutaRelativa)
