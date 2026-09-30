@@ -25,13 +25,16 @@
                     </select>
                 </div>
                 <div class="col-md-7 d-flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-primary" id="btnVerInscriptos">
+                    <button type="button" class="btn btn-primary"
+                            onclick="verInscriptosDeMateriaSeleccionada()">
                         <i class="bi bi-people me-1"></i>Ver inscriptos y cargar notas
                     </button>
-                    <button type="button" class="btn btn-outline-primary" id="btnVerListado">
+                    <button type="button" class="btn btn-outline-primary"
+                            onclick="verListadoDeMateriaSeleccionada()">
                         <i class="bi bi-printer me-1"></i>Listado imprimible
                     </button>
-                    <button type="button" class="btn btn-outline-secondary" id="btnDescargarPdf">
+                    <button type="button" class="btn btn-outline-secondary"
+                            onclick="descargarListadoPdfDeMateriaSeleccionada()">
                         <i class="bi bi-file-earmark-pdf me-1"></i>Descargar PDF
                     </button>
                 </div>
@@ -39,23 +42,3 @@
         }
     </div>
 </div>
-
-<script>
-    document.getElementById('btnVerInscriptos')?.addEventListener('click', function () {
-        const materiaId = document.getElementById('selectMateria').value;
-        if (!materiaId) { Swal.fire('Aviso', 'Seleccioná una materia.', 'warning'); return; }
-        cargarPortal('@Url.Action("Inscriptos", "Autogestion")' + '?materiaId=' + materiaId);
-    });
-
-    document.getElementById('btnVerListado')?.addEventListener('click', function () {
-        const materiaId = document.getElementById('selectMateria').value;
-        if (!materiaId) { Swal.fire('Aviso', 'Seleccioná una materia.', 'warning'); return; }
-        verListado(materiaId);
-    });
-
-    document.getElementById('btnDescargarPdf')?.addEventListener('click', function () {
-        const materiaId = document.getElementById('selectMateria').value;
-        if (!materiaId) { Swal.fire('Aviso', 'Seleccioná una materia.', 'warning'); return; }
-        descargarListadoPdf(materiaId);
-    });
-</script>

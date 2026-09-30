@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Net;
 
 namespace AppAlumnos.Controllers
 {
@@ -119,7 +120,7 @@ namespace AppAlumnos.Controllers
             {
                 if (!await _autogestionService.EsAlumnoRegularAsync(usuario.Id, anioActual))
                 {
-                    return Json(new { success = false, mensaje = "No consta tu condición de alumno regular en el año actual." });
+                    return PaginaError("No consta tu condición de alumno regular en el año actual.", StatusCodes.Status400BadRequest);
                 }
 
                 try
@@ -129,7 +130,7 @@ namespace AppAlumnos.Controllers
                 }
                 catch (FalloGeneracionDocumentoException)
                 {
-                    return Json(new { success = false, mensaje = "No se pudo generar el certificado. Intentá nuevamente." });
+                    return PaginaError("No se pudo generar el certificado. Intentá nuevamente.", StatusCodes.Status500InternalServerError);
                 }
             }
 
@@ -138,7 +139,7 @@ namespace AppAlumnos.Controllers
                 var materias = await _autogestionService.ObtenerMateriasAprobadasAsync(usuario.Id);
                 if (materias.Count == 0)
                 {
-                    return Json(new { success = false, mensaje = "Todavía no tenés materias aprobadas para certificar." });
+                    return PaginaError("Todavía no tenés materias aprobadas para certificar.", StatusCodes.Status400BadRequest);
                 }
 
                 try
@@ -148,11 +149,11 @@ namespace AppAlumnos.Controllers
                 }
                 catch (FalloGeneracionDocumentoException)
                 {
-                    return Json(new { success = false, mensaje = "No se pudo generar el certificado. Intentá nuevamente." });
+                    return PaginaError("No se pudo generar el certificado. Intentá nuevamente.", StatusCodes.Status500InternalServerError);
                 }
             }
 
-            return Json(new { success = false, mensaje = "Tipo de certificado no válido." });
+            return PaginaError("Tipo de certificado no válido.", StatusCodes.Status400BadRequest);
         }
 
         #endregion
@@ -256,12 +257,12 @@ namespace AppAlumnos.Controllers
 
             try
             {
-                var pdf = _certificadoService.GenerarListadoInscriptos(materia.Nombre, DateTime.Today.Year, inscriptos);
-                return File(pdf, "application/pdf", $"listado-inscriptos-{materia.Nombre}.pdf");
+                var pdf = _certificadoService.GenerarListadoInscriptos(materia.Nombre, inscriptos);
+                return File(pdf, "application/pdf", $"listado-inscriptos-{NombreArchivoSeguro(materia.Nombre)}.pdf");
             }
             catch (FalloGeneracionDocumentoException)
             {
-                return Json(new { success = false, mensaje = "No se pudo generar el listado. Intentá nuevamente." });
+                return PaginaError("No se pudo generar el listado. Intentá nuevamente.", StatusCodes.Status500InternalServerError);
             }
         }
 
@@ -296,6 +297,37 @@ namespace AppAlumnos.Controllers
         }
 
         #endregion
+
+        private static ContentResult PaginaError(string mensaje, int statusCode)
+        {
+            // Las descargas se abren con window.open, asi que un Json de error se veria
+            // como texto crudo en una pestana nueva. Se devuelve una pagina legible y
+            // un codigo de estado coherente con el fallo.
+            var html =
+                "<!DOCTYPE html><html lang=\"es\"><head><meta charset=\"utf-8\">" +
+                "<title>No se pudo completar la operacion</title></head>" +
+                "<body style=\"font-family: system-ui, sans-serif; background: #f8f9fa; color: #212529; padding: 3rem;\">" +
+                "<div style=\"background: #fff; border-left: 4px solid #dc3545; padding: 1.5rem 2rem; max-width: 32rem;\">" +
+                "<h1 style=\"font-size: 1.15rem; margin: 0 0 .5rem; color: #b02a37;\">No se pudo completar la operacion</h1>" +
+                $"<p style=\"margin: 0;\">{WebUtility.HtmlEncode(mensaje)}</p>" +
+                "</div></body></html>";
+
+            return new ContentResult
+            {
+                Content = html,
+                ContentType = "text/html; charset=utf-8",
+                StatusCode = statusCode
+            };
+        }
+
+        private static string NombreArchivoSeguro(string nombreMateria)
+        {
+            var invalidos = Path.GetInvalidFileNameChars();
+            var caracteres = nombreMateria.Select(c => invalidos.Contains(c) ? '-' : c).ToArray();
+            var nombreSaneado = new string(caracteres).Trim();
+
+            return nombreSaneado.Length == 0 ? "materia" : nombreSaneado;
+        }
 
         private static List<SelectListItem> ObtenerEstados(int? seleccionado)
         {

@@ -182,9 +182,19 @@ namespace AppAlumnos.Services
 
         public byte[] GenerarListadoInscriptos(
             string materiaNombre,
-            int anioLectivo,
             IReadOnlyCollection<InscriptoNotasDto> inscriptos)
         {
+            // Los ciclos se derivan de las filas para que el encabezado nunca pueda
+            // contradecir el contenido de la tabla.
+            var ciclos = inscriptos
+                .Select(i => i.AnioLectivo)
+                .Distinct()
+                .OrderBy(a => a)
+                .ToList();
+            var detalleCiclos = ciclos.Count == 0
+                ? string.Empty
+                : $" - Ciclos Lectivos: {string.Join(", ", ciclos)}";
+
             return GenerarDocumento(container =>
             {
                 container.Page(page =>
@@ -205,7 +215,7 @@ namespace AppAlumnos.Services
                         });
                         col.Item().AlignCenter().Text(txt =>
                         {
-                            txt.Span($"LISTADO DE ALUMNOS INSCRIPTOS - Ciclo Lectivo {anioLectivo}").FontSize(10).FontColor(Colors.Grey.Darken1);
+                            txt.Span($"LISTADO DE ALUMNOS INSCRIPTOS{detalleCiclos}").FontSize(10).FontColor(Colors.Grey.Darken1);
                         });
                         col.Item().PaddingTop(10).LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
                     });
@@ -222,12 +232,14 @@ namespace AppAlumnos.Services
                             table.ColumnsDefinition(columns =>
                             {
                                 columns.ConstantColumn(34);
+                                columns.ConstantColumn(78);
                                 columns.RelativeColumn();
-                                columns.ConstantColumn(72);
+                                columns.ConstantColumn(60);
                                 columns.ConstantColumn(100);
                             });
 
                             table.Cell().Element(CeldaCabecera).AlignCenter().Text("N°");
+                            table.Cell().Element(CeldaCabecera).AlignCenter().Text("Año Lectivo");
                             table.Cell().Element(CeldaCabecera).Text("Apellido y Nombre");
                             table.Cell().Element(CeldaCabecera).AlignCenter().Text("Nota");
                             table.Cell().Element(CeldaCabecera).AlignCenter().Text("Estado");
@@ -239,6 +251,7 @@ namespace AppAlumnos.Services
                                     ? (Func<IContainer, IContainer>)CeldaFila
                                     : CeldaFilaZebra;
                                 table.Cell().Element(estilo).AlignCenter().Text((filaCentral + 1).ToString());
+                                table.Cell().Element(estilo).AlignCenter().Text(alumno.AnioLectivo.ToString());
                                 table.Cell().Element(estilo).Text(alumno.ApellidoNombre);
                                 table.Cell().Element(estilo).AlignCenter()
                                     .Text(alumno.Nota.HasValue ? alumno.Nota.Value.ToString("0.#") : "-");

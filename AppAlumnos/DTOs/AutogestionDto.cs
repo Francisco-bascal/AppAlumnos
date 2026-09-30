@@ -54,6 +54,7 @@ public class MateriaAprobadaDto
 public class InscriptoNotasDto
 {
     public string ApellidoNombre { get; set; } = string.Empty;
+    public int AnioLectivo { get; set; }
     public decimal? Nota { get; set; }
     public string Estado { get; set; } = string.Empty;
 }

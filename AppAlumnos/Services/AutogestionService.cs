@@ -305,6 +305,7 @@ public class AutogestionService
             .Select(c => new InscriptoNotasDto
             {
                 ApellidoNombre = c.Usuario.Apellido + ", " + c.Usuario.Nombre,
+                AnioLectivo = c.AnioLectivo,
                 Nota = c.Nota,
                 Estado = c.Estado.ToString()
             })

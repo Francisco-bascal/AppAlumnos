@@ -67,7 +67,7 @@
         </div>
         <div class="col-sm-6 col-lg-4">
             <button type="button" class="card card-opcion text-center w-100 h-100 border-0 shadow-sm"
-                    onclick="cargarPortal('@Url.Action("SeleccionarListado", "Autogestion")')">
+                    onclick="cargarPortal('@Url.Action("MisMaterias", "Autogestion")')">
                 <div class="card-body">
                     <i class="bi bi-pencil-square fs-1 text-primary"></i>
                     <h6 class="card-title mt-3 mb-1">Cargar notas y estado</h6>
@@ -245,6 +245,30 @@
 
         function descargarListadoPdf(materiaId) {
             window.open('@Url.Action("DescargarListadoPdf", "Autogestion")' + '?materiaId=' + materiaId, '_blank');
+        }
+
+        function materiaSeleccionada() {
+            const materiaId = document.getElementById('selectMateria')?.value;
+            if (!materiaId) {
+                Swal.fire('Aviso', 'Seleccioná una materia.', 'warning');
+                return null;
+            }
+            return materiaId;
+        }
+
+        function verInscriptosDeMateriaSeleccionada() {
+            const materiaId = materiaSeleccionada();
+            if (materiaId) cargarPortal('@Url.Action("Inscriptos", "Autogestion")' + '?materiaId=' + materiaId);
+        }
+
+        function verListadoDeMateriaSeleccionada() {
+            const materiaId = materiaSeleccionada();
+            if (materiaId) verListado(materiaId);
+        }
+
+        function descargarListadoPdfDeMateriaSeleccionada() {
+            const materiaId = materiaSeleccionada();
+            if (materiaId) descargarListadoPdf(materiaId);
         }
 
         function descargarCertificado(tipo) {
