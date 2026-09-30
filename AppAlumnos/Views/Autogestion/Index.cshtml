@@ -127,7 +127,7 @@
             <div class="card-body">
                 <i class="bi bi-person-circle fs-1 text-primary"></i>
                 <h6 class="card-title mt-3 mb-1">Mi perfil</h6>
-                <small class="text-muted">Consultá tus datos.</small>
+                <small class="text-muted">Actualizá tu foto de perfil y consultá tus datos.</small>
             </div>
         </button>
     </div>
@@ -249,6 +249,55 @@
 
         function descargarCertificado(tipo) {
             window.open('@Url.Action("GenerarCertificado", "Autogestion")' + '?tipo=' + tipo, '_blank');
+        }
+
+        function previsualizarAvatar(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const archivo = input.files[0];
+            if (archivo.size > 2 * 1024 * 1024) {
+                Swal.fire('Error', 'La imagen supera el tamaño máximo de 2 MB.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const extensionesValidas = ['jpg', 'jpeg', 'png', 'webp'];
+            const extension = archivo.name.split('.').pop().toLowerCase();
+            if (!extensionesValidas.includes(extension)) {
+                Swal.fire('Error', 'Formato no permitido. Usá JPG, PNG o WebP.', 'error');
+                input.value = '';
+                return;
+            }
+
+            const lector = new FileReader();
+            lector.onload = function (e) {
+                const img = document.getElementById('avatarPreview');
+                if (img) img.src = e.target.result;
+            };
+            lector.readAsDataURL(archivo);
+        }
+
+        function subirAvatar(event) {
+            event.preventDefault();
+            const form = event.target;
+
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('¡Foto actualizada!', data.mensaje, 'success');
+                        const img = document.getElementById('avatarPreview');
+                        if (img && data.rutaFoto) {
+                            img.src = data.rutaFoto + '?v=' + Date.now();
+                        }
+                        cargarPortal('@Url.Action("MiPerfil", "Autogestion")');
+                    } else {
+                        Swal.fire('Error', data.mensaje, 'error');
+                    }
+                });
         }
     </script>
 }

@@ -15,18 +15,15 @@ namespace AppAlumnos.Controllers
         private readonly AutogestionService _autogestionService;
         private readonly CertificadoService _certificadoService;
         private readonly UserManager<Usuario> _userManager;
-        private readonly ILogger<AutogestionController> _logger;
 
         public AutogestionController(
             AutogestionService autogestionService,
             CertificadoService certificadoService,
-            UserManager<Usuario> userManager,
-            ILogger<AutogestionController> logger)
+            UserManager<Usuario> userManager)
         {
             _autogestionService = autogestionService;
             _certificadoService = certificadoService;
             _userManager = userManager;
-            _logger = logger;
         }
 
         // GET: Autogestion/Index
@@ -293,21 +290,7 @@ namespace AppAlumnos.Controllers
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            // Sin estas trazas el rechazo solo era visible en la alerta del navegador,
-            // lo que dejaba sin diagnóstico cualquier fallo de la subida.
-            _logger.LogInformation(
-                "Subida de avatar solicitada. Usuario: {UsuarioId}, Archivo: {NombreArchivo}, TamanoBytes: {TamanoBytes}",
-                usuario.Id,
-                foto?.FileName ?? "(sin archivo)",
-                foto?.Length ?? 0);
-
             var resultado = await _autogestionService.ActualizarAvatarAsync(usuario.Id, foto);
-
-            _logger.LogInformation(
-                "Subida de avatar finalizada. Usuario: {UsuarioId}, Exito: {Exito}, Mensaje: {Mensaje}",
-                usuario.Id,
-                resultado.Ok,
-                resultado.Mensaje);
 
             return Json(new { success = resultado.Ok, mensaje = resultado.Mensaje, rutaFoto = resultado.RutaRelativa });
         }
