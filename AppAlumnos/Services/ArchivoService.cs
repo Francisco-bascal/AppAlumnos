@@ -21,7 +21,7 @@ namespace AppAlumnos.Services
                 _environment = environment;
             }
 
-            public async Task<ResultadoOperacionDto> GuardarAvatarAsync(IFormFile archivo)
+            public async Task<ResultadoOperacionDto> GuardarAvatarAsync(IFormFile? archivo)
             {
                 if (archivo == null || archivo.Length == 0)
                 {

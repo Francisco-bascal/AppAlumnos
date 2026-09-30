@@ -61,13 +61,10 @@
                                     onclick="abrirModal('@Url.Action("ObtenerFormulario", "Cursadas", new { id = item.Id })')">
                                 Editar
                             </button>
-                            @if (User.IsInRole("Docente") || User.IsInRole("Administrador"))
-                            {
-                                <button class="btn btn-sm btn-outline-primary me-1"
-                                        onclick="abrirModalNotas(@item.Id)">
-                                    Cargar Notas
-                                </button>
-                            }
+                            <button class="btn btn-sm btn-outline-primary me-1"
+                                    onclick="abrirModalNotas(@item.Id)">
+                                Cargar Notas
+                            </button>
                             <button class="btn btn-sm btn-outline-danger"
                                     onclick="eliminarCursada(@item.Id)">
                                 Eliminar

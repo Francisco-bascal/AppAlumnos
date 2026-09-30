@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AppAlumnos.Controllers
 {
-    [Authorize(Roles = "Administrador,Docente")]
+    [Authorize(Roles = "Administrador")]
     public class CursadasController : Controller
     {
         private readonly CursadaService _cursadaService;
@@ -48,9 +48,8 @@ namespace AppAlumnos.Controllers
             return PartialView("_FormularioCursadaPartial", dto);
         }
 
-        // GET: Cursadas/ObtenerFormularioNotas/5 (Carga de notas por Docente/Admin)
+        // GET: Cursadas/ObtenerFormularioNotas/5 (Carga de notas por Administrador)
         [HttpGet]
-        [Authorize(Roles = "Docente,Administrador")]
         public async Task<IActionResult> ObtenerFormularioNotas(int id)
         {
             var dto = await _cursadaService.ObtenerFormularioNotasAsync(id);
@@ -59,22 +58,12 @@ namespace AppAlumnos.Controllers
                 return NotFound();
             }
 
-            if (!User.IsInRole("Administrador"))
-            {
-                var usuario = await _userManager.GetUserAsync(User);
-                if (usuario == null || !await _cursadaService.EsDocenteDeCursadaAsync(id, usuario.Id))
-                {
-                    return Forbid();
-                }
-            }
-
             return PartialView("_FormularioNotasPartial", dto);
         }
 
         // POST: Cursadas/GuardarNotas/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Docente,Administrador")]
         public async Task<IActionResult> GuardarNotas(int id, string nota, EstadoCursada estado)
         {
             var usuario = await _userManager.GetUserAsync(User);

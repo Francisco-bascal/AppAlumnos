@@ -131,13 +131,6 @@ public class CursadaService
             .FirstOrDefaultAsync();
     }
 
-    public async Task<bool> EsDocenteDeCursadaAsync(int id, string usuarioId)
-    {
-        return await _contexto.Cursadas
-            .AsNoTracking()
-            .AnyAsync(c => c.Id == id && c.Materia.DocenteId == usuarioId);
-    }
-
     public async Task<ResultadoOperacionDto> GuardarNotasAsync(
         int id,
         string? nota,

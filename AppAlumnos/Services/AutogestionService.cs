@@ -188,41 +188,24 @@ public class AutogestionService
             .ToListAsync();
     }
 
-    public async Task<List<MateriaDto>> ObtenerMisMateriasAsync(string usuarioId, bool esAdministrador)
+    public async Task<List<MateriaDto>> ObtenerMisMateriasAsync(string usuarioId)
     {
-        IQueryable<Materia> consulta = _contexto.Materias.AsNoTracking();
-
-        if (!esAdministrador)
-        {
-            consulta = consulta.Where(m => m.DocenteId == usuarioId);
-        }
-
-        return await consulta
+        return await _contexto.Materias
+            .AsNoTracking()
+            .Where(m => m.DocenteId == usuarioId)
             .OrderBy(m => m.Anio)
             .ThenBy(m => m.Nombre)
             .Select(m => new MateriaDto { Id = m.Id, Nombre = m.Nombre, Anio = m.Anio })
             .ToListAsync();
     }
 
-    public async Task<MateriaDto?> ObtenerMateriaAutorizadaAsync(int materiaId, string? usuarioId, bool esAdministrador)
+    public async Task<MateriaDto?> ObtenerMateriaAutorizadaAsync(int materiaId, string usuarioId)
     {
-        var materia = await _contexto.Materias
+        return await _contexto.Materias
             .AsNoTracking()
-            .Where(m => m.Id == materiaId)
+            .Where(m => m.Id == materiaId && m.DocenteId == usuarioId)
             .Select(m => new MateriaDto { Id = m.Id, Nombre = m.Nombre, Anio = m.Anio, DocenteId = m.DocenteId })
             .FirstOrDefaultAsync();
-
-        if (materia == null)
-        {
-            return null;
-        }
-
-        if (esAdministrador)
-        {
-            return materia;
-        }
-
-        return usuarioId != null && materia.DocenteId == usuarioId ? materia : null;
     }
 
     public async Task<List<InscriptoDto>> ObtenerInscriptosAsync(int materiaId)
@@ -245,8 +228,7 @@ public class AutogestionService
 
     public async Task<(bool Existe, bool Autorizado, NotasDto? Dto)> ObtenerFormularioNotasAsync(
         int cursadaId,
-        string? usuarioId,
-        bool esAdministrador)
+        string usuarioId)
     {
         var fila = await _contexto.Cursadas
             .AsNoTracking()
@@ -269,7 +251,7 @@ public class AutogestionService
             return (false, false, null);
         }
 
-        var autorizado = esAdministrador || (usuarioId != null && fila.DocenteId == usuarioId);
+        var autorizado = fila.DocenteId == usuarioId;
         var dto = new NotasDto
         {
             Id = fila.Id,
@@ -287,32 +269,26 @@ public class AutogestionService
         int id,
         string? nota,
         EstadoCursada estado,
-        string? usuarioOperanteId,
-        bool esAdministrador)
+        string usuarioId)
     {
-        return await _cursadaService.GuardarNotasAsync(id, nota, estado, usuarioOperanteId, esAdministrador);
+        return await _cursadaService.GuardarNotasAsync(id, nota, estado, usuarioId, false);
     }
 
-    public async Task<List<MateriaDto>> ObtenerMateriasParaSeleccionAsync(string usuarioId, bool esAdministrador)
+    public async Task<List<MateriaDto>> ObtenerMateriasParaSeleccionAsync(string usuarioId)
     {
-        IQueryable<Materia> consulta = _contexto.Materias.AsNoTracking().OrderBy(m => m.Nombre);
-
-        if (!esAdministrador)
-        {
-            consulta = consulta.Where(m => m.DocenteId == usuarioId);
-        }
-
-        return await consulta
+        return await _contexto.Materias
+            .AsNoTracking()
+            .Where(m => m.DocenteId == usuarioId)
+            .OrderBy(m => m.Nombre)
             .Select(m => new MateriaDto { Id = m.Id, Nombre = m.Nombre })
             .ToListAsync();
     }
 
     public async Task<(MateriaDto? Materia, List<InscriptoNotasDto> Inscriptos)> ObtenerListadoInscriptosAsync(
         int materiaId,
-        string? usuarioId,
-        bool esAdministrador)
+        string usuarioId)
     {
-        var materia = await ObtenerMateriaAutorizadaAsync(materiaId, usuarioId, esAdministrador);
+        var materia = await ObtenerMateriaAutorizadaAsync(materiaId, usuarioId);
         if (materia == null)
         {
             return (null, new List<InscriptoNotasDto>());

@@ -34,7 +34,7 @@ namespace AppAlumnos.Controllers
         #region Alumno
 
         // GET: Autogestion/InscripcionMaterias
-        [Authorize(Roles = "Alumno,Administrador")]
+        [Authorize(Roles = "Alumno")]
         public async Task<IActionResult> InscripcionMaterias()
         {
             var usuario = await _userManager.GetUserAsync(User);
@@ -49,7 +49,7 @@ namespace AppAlumnos.Controllers
         // POST: Autogestion/Inscribirse
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Alumno,Administrador")]
+        [Authorize(Roles = "Alumno")]
         public async Task<IActionResult> Inscribirse(int materiaId)
         {
             var usuario = await _userManager.GetUserAsync(User);
@@ -60,7 +60,7 @@ namespace AppAlumnos.Controllers
         }
 
         // GET: Autogestion/HistoriaAcademica?anio=&estado=
-        [Authorize(Roles = "Alumno,Administrador")]
+        [Authorize(Roles = "Alumno")]
         public async Task<IActionResult> HistoriaAcademica(int? anio, EstadoCursada? estado)
         {
             var usuario = await _userManager.GetUserAsync(User);
@@ -75,7 +75,7 @@ namespace AppAlumnos.Controllers
         }
 
         // GET: Autogestion/HistoriaImprimir
-        [Authorize(Roles = "Alumno,Administrador")]
+        [Authorize(Roles = "Alumno")]
         public async Task<IActionResult> HistoriaImprimir()
         {
             var usuario = await _userManager.GetUserAsync(User);
@@ -87,7 +87,7 @@ namespace AppAlumnos.Controllers
         }
 
         // GET: Autogestion/Certificados
-        [Authorize(Roles = "Alumno,Administrador")]
+        [Authorize(Roles = "Alumno")]
         public async Task<IActionResult> Certificados()
         {
             var usuario = await _userManager.GetUserAsync(User);
@@ -102,7 +102,7 @@ namespace AppAlumnos.Controllers
         }
 
         // GET: Autogestion/GenerarCertificado?tipo=regular|materias
-        [Authorize(Roles = "Alumno,Administrador")]
+        [Authorize(Roles = "Alumno")]
         public async Task<IActionResult> GenerarCertificado(string tipo)
         {
             var usuario = await _userManager.GetUserAsync(User);
@@ -145,27 +145,24 @@ namespace AppAlumnos.Controllers
         #region Docente
 
         // GET: Autogestion/MisMaterias
-        [Authorize(Roles = "Docente,Administrador")]
+        [Authorize(Roles = "Docente")]
         public async Task<IActionResult> MisMaterias()
         {
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var esAdministrador = User.IsInRole("Administrador");
-            ViewBag.EsAdministrador = esAdministrador;
-            var materias = await _autogestionService.ObtenerMisMateriasAsync(usuario.Id, esAdministrador);
+            var materias = await _autogestionService.ObtenerMisMateriasAsync(usuario.Id);
             return PartialView("_MisMateriasPartial", materias);
         }
 
         // GET: Autogestion/Inscriptos?materiaId=5
-        [Authorize(Roles = "Docente,Administrador")]
+        [Authorize(Roles = "Docente")]
         public async Task<IActionResult> Inscriptos(int materiaId)
         {
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var esAdministrador = User.IsInRole("Administrador");
-            var materia = await _autogestionService.ObtenerMateriaAutorizadaAsync(materiaId, usuario.Id, esAdministrador);
+            var materia = await _autogestionService.ObtenerMateriaAutorizadaAsync(materiaId, usuario.Id);
             if (materia == null) return NotFound();
 
             var inscriptos = await _autogestionService.ObtenerInscriptosAsync(materiaId);
@@ -176,14 +173,13 @@ namespace AppAlumnos.Controllers
         }
 
         // GET: Autogestion/ObtenerFormularioNotas?cursadaId=7 (contenido del modal)
-        [Authorize(Roles = "Docente,Administrador")]
+        [Authorize(Roles = "Docente")]
         public async Task<IActionResult> ObtenerFormularioNotas(int cursadaId)
         {
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var esAdministrador = User.IsInRole("Administrador");
-            var (existe, autorizado, dto) = await _autogestionService.ObtenerFormularioNotasAsync(cursadaId, usuario.Id, esAdministrador);
+            var (existe, autorizado, dto) = await _autogestionService.ObtenerFormularioNotasAsync(cursadaId, usuario.Id);
             if (!existe) return NotFound();
             if (!autorizado) return Forbid();
 
@@ -193,39 +189,37 @@ namespace AppAlumnos.Controllers
         // POST: Autogestion/GuardarNotas
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Docente,Administrador")]
+        [Authorize(Roles = "Docente")]
         public async Task<IActionResult> GuardarNotas(int id, string nota, EstadoCursada estado)
         {
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var resultado = await _autogestionService.GuardarNotasAsync(id, nota, estado, usuario.Id, User.IsInRole("Administrador"));
+            var resultado = await _autogestionService.GuardarNotasAsync(id, nota, estado, usuario.Id);
             return Json(new { success = resultado.Ok, mensaje = resultado.Mensaje });
         }
 
         // GET: Autogestion/SeleccionarListado
-        [Authorize(Roles = "Docente,Administrador")]
+        [Authorize(Roles = "Docente")]
         public async Task<IActionResult> SeleccionarListado()
         {
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var esAdministrador = User.IsInRole("Administrador");
-            var materias = await _autogestionService.ObtenerMateriasParaSeleccionAsync(usuario.Id, esAdministrador);
+            var materias = await _autogestionService.ObtenerMateriasParaSeleccionAsync(usuario.Id);
 
             ViewBag.Materias = new SelectList(materias, "Id", "Nombre");
             return PartialView("_SeleccionarListadoPartial");
         }
 
         // GET: Autogestion/ListadoInscriptos?materiaId=5 (página imprimible)
-        [Authorize(Roles = "Docente,Administrador")]
+        [Authorize(Roles = "Docente")]
         public async Task<IActionResult> ListadoInscriptos(int materiaId)
         {
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var esAdministrador = User.IsInRole("Administrador");
-            var (materia, inscriptos) = await _autogestionService.ObtenerListadoInscriptosAsync(materiaId, usuario.Id, esAdministrador);
+            var (materia, inscriptos) = await _autogestionService.ObtenerListadoInscriptosAsync(materiaId, usuario.Id);
             if (materia == null) return NotFound();
 
             ViewBag.MateriaNombre = materia.Nombre;
@@ -236,14 +230,13 @@ namespace AppAlumnos.Controllers
         }
 
         // GET: Autogestion/DescargarListadoPdf?materiaId=5
-        [Authorize(Roles = "Docente,Administrador")]
+        [Authorize(Roles = "Docente")]
         public async Task<IActionResult> DescargarListadoPdf(int materiaId)
         {
             var usuario = await _userManager.GetUserAsync(User);
             if (usuario == null) return Challenge();
 
-            var esAdministrador = User.IsInRole("Administrador");
-            var (materia, inscriptos) = await _autogestionService.ObtenerListadoInscriptosAsync(materiaId, usuario.Id, esAdministrador);
+            var (materia, inscriptos) = await _autogestionService.ObtenerListadoInscriptosAsync(materiaId, usuario.Id);
             if (materia == null) return NotFound();
 
             var pdf = _certificadoService.GenerarListadoInscriptos(materia.Nombre, DateTime.Today.Year, inscriptos);
