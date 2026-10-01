@@ -320,6 +320,8 @@ namespace AppAlumnos.Controllers
             };
         }
 
+        // Sustituye los caracteres no válidos para el sistema de archivos por guiones, para
+        // que el nombre de la materia pueda usarse en el header Content-Disposition.
         private static string NombreArchivoSeguro(string nombreMateria)
         {
             var invalidos = Path.GetInvalidFileNameChars();

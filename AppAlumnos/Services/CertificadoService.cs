@@ -8,6 +8,8 @@ using System.Collections.Generic;
 
 namespace AppAlumnos.Services
 {
+    // Único servicio síncrono: QuestPDF no expone una API asíncrona y la generación
+    // no realiza E/S contra la base de datos, solo composición del documento en memoria.
     public class CertificadoService
     {
         private const string Institucion = "Instituto Superior de Formación Técnica";

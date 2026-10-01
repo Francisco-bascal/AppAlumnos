@@ -214,6 +214,8 @@ public class UsuarioService
         return new ResultadoOperacionDto(true, estado ? "Usuario activado correctamente." : "Usuario desactivado correctamente.");
     }
 
+    // Si tiene historial (cursadas o materias donde es docente) se aplica baja lógica
+    // (Estado = inactivo). Solo se elimina físicamente cuando no tiene dependencias.
     public async Task<ResultadoOperacionDto> EliminarUsuarioAsync(string id, string? usuarioOperanteId)
     {
         if (string.Equals(id, usuarioOperanteId, StringComparison.OrdinalIgnoreCase))
@@ -256,6 +258,7 @@ public class UsuarioService
         return new ResultadoOperacionDto(true, "El usuario tenía registros asociados: se aplicó la baja lógica (Estado = inactivo).");
     }
 
+    // Regla de negocio: impide dejar el sistema sin al menos un administrador activo.
     private async Task<bool> EsUltimoAdministradorActivoAsync(string idExcluido)
     {
         var cantidad = await _contexto.Users.CountAsync(u =>

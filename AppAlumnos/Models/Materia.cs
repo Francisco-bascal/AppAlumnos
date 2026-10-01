@@ -11,6 +11,8 @@ namespace AppAlumnos.Models
         public string Nombre { get; set; } = string.Empty;
         [Display(Name = "Año Cursado")]
         [Range(1, 6, ErrorMessage = "El año debe estar entre 1 y 6.")]
+        // Año cursado de la carrera (1 a 6). No es intercambiable con Cursada.AnioLectivo,
+        // que es el calendario del cursado. La confusión entre ambos rompe los filtros.
         public int Anio { get; set; }
         [Display(Name = "Docente")]
         public string? DocenteId { get; set; }

@@ -24,6 +24,8 @@ public class Cursada : AuditableEntity
 
     [Display(Name = "Año Lectivo")]
     [Range(2000, 2100, ErrorMessage = "Ingrese un año lectivo válido.")]
+    // Año calendario del cursado (por ejemplo 2026). Distinto de Materia.Anio, que
+    // es el año cursado de la carrera. Determina el período de un HISTORIAL completo.
     public int AnioLectivo { get; set; } = DateTime.Today.Year;
 
     [Display(Name = "Nota")]

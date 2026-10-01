@@ -6,6 +6,8 @@ namespace AppAlumnos.Controllers
 {
     public class HomeController : Controller
     {
+        // ILogger<HomeController> se inyecta por constructor pero no se usa en ninguna acción:
+        // queda disponible si más adelante se agrega trazabilidad, sin cambiar la firma.
         private readonly ILogger<HomeController> _logger;
 
         public HomeController(ILogger<HomeController> logger)

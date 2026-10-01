@@ -93,6 +93,9 @@
         const modalElement = new bootstrap.Modal(document.getElementById('modalMateria'));
         const modalContent = document.getElementById('modalContent');
 
+        // Patrón AJAX con partials inyectados por innerHTML (sin ejecutar <script> embebidos).
+        // La explicación completa del patrón está en Views/Autogestion/Index.cshtml.
+
         // 1. Abrir Modal para Crear/Editar
         function abrirModal(url) {
         fetch(url)

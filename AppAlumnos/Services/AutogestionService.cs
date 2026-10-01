@@ -47,6 +47,8 @@ public class AutogestionService
             .ToListAsync();
     }
 
+    // La consulta previa evita la mayoría de duplicados, pero el catch sobre DbUpdateException
+    // cubre la carrera entre la verificación y el guardado (violación del índice único).
     public async Task<ResultadoOperacionDto> InscribirseAsync(string usuarioId, int materiaId, int anio)
     {
         var materia = await _contexto.Materias
@@ -84,6 +86,8 @@ public class AutogestionService
         return new ResultadoOperacionDto(true, $"Inscripción confirmada en {materia.Nombre}.");
     }
 
+    // Los filtros opcionales (año y estado) se encadenan sobre IQueryable antes de
+    // materializar, para no traer todo el historial del usuario a memoria.
     public async Task<(List<CursadaHistoriaDto> Cursadas, List<int> Anios)> ObtenerHistoriaAsync(
         string usuarioId,
         int? anio,

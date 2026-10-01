@@ -21,6 +21,8 @@ public class ArchivoService
         _logger = logger;
     }
 
+    // Además de extensión y MIME, se validan los magic bytes del archivo porque ambos
+    // valores los declara el cliente y pueden falsearse para subir contenido no permitido.
     public async Task<ResultadoOperacionDto> GuardarAvatarAsync(IFormFile? archivo)
     {
         if (archivo == null || archivo.Length == 0)
@@ -90,6 +92,8 @@ public class ArchivoService
         return resultado;
     }
 
+    // Exigir el prefijo images/avatars/ actúa como guard contra path traversal: solo
+    // se borran archivos dentro del directorio de avatares, nunca rutas arbitrarias.
     public void EliminarAvatar(string? rutaRelativa)
     {
         if (string.IsNullOrWhiteSpace(rutaRelativa)) return;

@@ -92,6 +92,8 @@ public class MateriaService
         return new ResultadoOperacionDto(true, "Materia guardada correctamente.");
     }
 
+    // Se bloquea la eliminación si la materia tiene cursadas asociadas para no
+    // romper el historial académico de las inscripciones y sus notas.
     public async Task<ResultadoOperacionDto> EliminarAsync(int id)
     {
         var materia = await _contexto.Materias.FindAsync(id);

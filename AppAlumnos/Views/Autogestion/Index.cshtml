@@ -148,9 +148,29 @@
     <partial name="_ValidationScriptsPartial" />
 
     <script>
+        // ------------------------------------------------------------------
+        // PATRÓN DEL PORTAL: partials vía AJAX + formularios parciales
+        // Los partials se solicitan con fetch y se inyectan con innerHTML
+        // en #contenidoPortal o en el modal. Los <script> dentro del HTML
+        // insertado NO se ejecutan, por eso los partials usan únicamente
+        // handlers onclick, onsubmit u onchange y todo el JS vive aquí.
+        // En POST, el controlador responde JSON { success, mensaje } si
+        // tiene éxito; si ModelState falla, devuelve el partial con errores
+        // y el JS lo vuelve a inyectar para mostrar validaciones.
+        // El token antiforgery se renderiza una vez con @Html.AntiForgeryToken()
+        // (fuera de los formularios parciales) y el JS lo lee del DOM.
+        // Las descargas NO usan fetch: se abren con window.open; por ello
+        // los endpoints de descarga devuelven HTML (PaginaError) con código
+        // HTTP 400/500 ante errores, nunca JSON. Esto evita tratar un blob
+        // de error como JSON. El flujo docente evita depender de <script>
+        // inyectados (ver _SeleccionarListadoPartial). La validación jQuery
+        // Unobtrusive se vuelve a vincular con $.validator.unobtrusive.parse
+        // cada vez que se reinyecta HTML en el modal.
+        // ------------------------------------------------------------------
         const modalPortalElement = new bootstrap.Modal(document.getElementById('modalPortal'));
         const modalPortalContent = document.getElementById('modalPortalContent');
 
+        // 1. Inyecta un partial en el área de contenido del portal
         function cargarPortal(url) {
             fetch(url)
                 .then(res => res.text())
@@ -159,6 +179,7 @@
                 });
         }
 
+        // 2. Inyecta un partial dentro del modal y revincula sus validaciones
         function abrirModalPortal(url, formId) {
             fetch(url)
                 .then(res => res.text())
@@ -169,6 +190,7 @@
                 });
         }
 
+        // 3. POST genérico de formularios parciales; recarga el partial de origen al éxito
         function guardarFormularioPortal(event, urlReload) {
             event.preventDefault();
             const form = event.target;
@@ -191,6 +213,7 @@
                 });
         }
 
+        // 4. Confirma la inscripción y envía el token antiforgery leído del DOM
         function inscribirse(materiaId) {
             Swal.fire({
                 title: '¿Confirmás la inscripción?',
@@ -225,28 +248,34 @@
             });
         }
 
+        // 5. Aplica los filtros de la historia académica recargando el partial
         function filtrarHistoria() {
             const anio = document.getElementById('filtroAnio')?.value ?? '';
             const estado = document.getElementById('filtroEstado')?.value ?? '';
             cargarPortal('@Url.Action("HistoriaAcademica", "Autogestion")' + '?anio=' + anio + '&estado=' + estado);
         }
 
+        // 6. Guarda las notas usando el flujo genérico y vuelve a listar los inscriptos
         function guardarNotasPortal(event) {
             guardarFormularioPortal(event, '@Url.Action("Inscriptos", "Autogestion")' + '?materiaId=' + document.getElementById('materiaContexto')?.value);
         }
 
+        // 7. Abre el formulario de notas de una cursada en el modal
         function abrirFormularioNotas(cursadaId) {
             abrirModalPortal('@Url.Action("ObtenerFormularioNotas", "Autogestion")' + '?cursadaId=' + cursadaId, '#formNotasPortal');
         }
 
+        // 8. Abre el listado imprimible en una pestaña nueva (window.open, no fetch)
         function verListado(materiaId) {
             window.open('@Url.Action("ListadoInscriptos", "Autogestion")' + '?materiaId=' + materiaId, '_blank');
         }
 
+        // 9. Descarga el listado en PDF abriendo la URL en una pestaña nueva
         function descargarListadoPdf(materiaId) {
             window.open('@Url.Action("DescargarListadoPdf", "Autogestion")' + '?materiaId=' + materiaId, '_blank');
         }
 
+        // 10. Devuelve la materia elegida o null si el selector está vacío
         function materiaSeleccionada() {
             const materiaId = document.getElementById('selectMateria')?.value;
             if (!materiaId) {
@@ -256,25 +285,30 @@
             return materiaId;
         }
 
+        // 11. Inyecta el partial de inscriptos para la materia seleccionada
         function verInscriptosDeMateriaSeleccionada() {
             const materiaId = materiaSeleccionada();
             if (materiaId) cargarPortal('@Url.Action("Inscriptos", "Autogestion")' + '?materiaId=' + materiaId);
         }
 
+        // 12. Abre el listado imprimible de la materia seleccionada
         function verListadoDeMateriaSeleccionada() {
             const materiaId = materiaSeleccionada();
             if (materiaId) verListado(materiaId);
         }
 
+        // 13. Descarga el PDF del listado de la materia seleccionada
         function descargarListadoPdfDeMateriaSeleccionada() {
             const materiaId = materiaSeleccionada();
             if (materiaId) descargarListadoPdf(materiaId);
         }
 
+        // 14. Abre el certificado solicitado en una pestaña nueva
         function descargarCertificado(tipo) {
             window.open('@Url.Action("GenerarCertificado", "Autogestion")' + '?tipo=' + tipo, '_blank');
         }
 
+        // 15. Valida el archivo en el navegador y muestra una vista previa local
         function previsualizarAvatar(input) {
             if (!input.files || !input.files[0]) return;
 
@@ -301,6 +335,7 @@
             lector.readAsDataURL(archivo);
         }
 
+        // 16. Sube el avatar con FormData y refresca la imagen con una clave anti-caché
         function subirAvatar(event) {
             event.preventDefault();
             const form = event.target;

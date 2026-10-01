@@ -131,6 +131,8 @@ public class CursadaService
             .FirstOrDefaultAsync();
     }
 
+    // La nota se parsea primero con cultura invariante y luego con la actual para
+    // aceptar ambos formatos; los listados y PDF la formatean como "0.#".
     public async Task<ResultadoOperacionDto> GuardarNotasAsync(
         int id,
         string? nota,

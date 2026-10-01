@@ -1,4 +1,6 @@
 ﻿@model GuardarMateriaDto
+@* Este partial no incluye su propio @Html.AntiForgeryToken(): comparte el DOM con la
+   vista índice, que ya renderiza el token y desde donde el JS lo lee para el POST. *@
 <div class="modal-header bg-primary text-white">
     <h5 class="modal-title">
         @(Model.Id == 0 ? "Nueva Materia" :
